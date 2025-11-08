@@ -6,6 +6,7 @@ Get the Kalshi AI Trading Dashboard running in 3 minutes.
 
 - Node.js 18+ installed
 - npm or yarn
+- Google account (for authentication)
 
 ## Step-by-Step
 
@@ -24,25 +25,64 @@ npm install
 This will install all required packages including:
 
 - Next.js, React, TypeScript
+- NextAuth.js for authentication
 - Tailwind CSS, shadcn/ui components
 - Framer Motion, Recharts
 - Zustand, next-themes
 
-### 3. Start the development server
+### 3. Set up Google OAuth
+
+**Important:** You must set up Google OAuth before the app will work.
+
+See `GOOGLE_OAUTH_SETUP.md` for detailed instructions. Quick version:
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project
+3. Enable OAuth consent screen
+4. Create OAuth credentials
+5. Copy your Client ID and Client Secret
+
+### 4. Configure environment variables
+
+```bash
+# Copy the example file
+cp .env.local.example .env.local
+```
+
+Edit `.env.local` and add:
+
+```bash
+AUTH_SECRET=your-secret-key-here  # Generate with: openssl rand -base64 32
+GOOGLE_CLIENT_ID=your-google-client-id-here
+GOOGLE_CLIENT_SECRET=your-google-client-secret-here
+NEXTAUTH_URL=http://localhost:3000
+```
+
+### 5. Start the development server
 
 ```bash
 npm run dev
 ```
 
-### 4. Open your browser
+### 6. Open your browser
 
 Navigate to [http://localhost:3000](http://localhost:3000)
 
-You'll be automatically redirected to `/dashboard`.
+You'll see the landing page. Click "Sign in with Google" to authenticate.
 
 ## What You'll See
 
-### Dashboard Page (Default)
+### Landing Page (Unauthenticated)
+
+- Modern hero section with branding
+- "Sign in with Google" button
+- Feature cards highlighting:
+  - Real-time analytics
+  - AI trading agents
+  - Secure authentication
+- Professional footer
+
+### Dashboard Page (After Login)
 
 - **Top**: 4 KPI summary cards (Total Equity, 24h P&L, Win Rate, Open Risk)
 - **Center**: Interactive portfolio performance chart with range filters (1D/1W/1M/All)
@@ -70,6 +110,14 @@ Configure your trading parameters:
 - **API Config**: Placeholder for Kalshi API keys
 
 ## Features to Try
+
+### Authentication
+
+1. Sign in with your Google account
+2. You'll be automatically redirected to `/dashboard`
+3. The navigation bar appears with Dashboard, Markets, and Settings links
+4. Click "Sign Out" button in the top-right to return to the landing page
+5. All dashboard routes are protected - you can't access them without signing in
 
 ### Agent Feed Interactions
 
@@ -155,7 +203,26 @@ Optimized production build with:
 - Image optimization
 - Font optimization
 
+**Important for production:**
+- Update Google OAuth redirect URIs with your production domain
+- Use HTTPS in production
+- Set `NEXTAUTH_URL` to your production URL
+- Keep your `.env.local` file secure and never commit it
+
 ## Troubleshooting
+
+### "Invalid redirect_uri" error
+
+Make sure your Google OAuth redirect URI exactly matches:
+- Development: `http://localhost:3000/api/auth/callback/google`
+- Production: `https://yourdomain.com/api/auth/callback/google`
+
+### "Invalid client" error
+
+Check that:
+- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are correct
+- No extra spaces in `.env.local`
+- Environment variables are loaded (restart dev server)
 
 ### Port 3000 already in use
 
@@ -182,6 +249,7 @@ npm run build
 ## Tech Stack Quick Reference
 
 - **Next.js 14**: React framework with App Router
+- **NextAuth.js v5**: Authentication with Google OAuth
 - **TypeScript**: Type safety
 - **Tailwind CSS**: Utility-first styling
 - **shadcn/ui**: Accessible component primitives
@@ -194,10 +262,17 @@ npm run build
 
 ```
 dashboard/
-├── app/              # Pages (dashboard, markets, settings)
+├── app/              # Pages (landing, dashboard, markets, settings)
+│   ├── page.tsx      # Landing page (with auth check)
+│   ├── dashboard/    # Protected dashboard route
+│   ├── markets/      # Protected markets route
+│   └── settings/     # Protected settings route
 ├── components/       # React components + UI primitives
+│   └── LandingPage.tsx  # Landing page component
 ├── lib/              # Data hooks + utilities
 ├── store/            # Zustand stores
+├── auth.ts           # NextAuth configuration
+├── middleware.ts     # Route protection
 └── package.json      # Dependencies
 ```
 
@@ -205,8 +280,9 @@ dashboard/
 
 For questions or issues:
 
-1. Check the main README.md
+1. Check `GOOGLE_OAUTH_SETUP.md` for authentication setup
 2. Review component source code (all documented)
 3. Inspect browser console for errors
+4. Check `.env.local` file is properly configured
 
 Enjoy building with the Kalshi AI Trading Dashboard! 🚀
