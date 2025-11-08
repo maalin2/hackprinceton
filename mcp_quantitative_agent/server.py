@@ -19,6 +19,18 @@ import importlib.util
 import os
 from pathlib import Path
 import pandas as pd
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+# Try to import xai_sdk for Grok integration
+try:
+    from xai_sdk import Client as XAIClient
+    XAI_AVAILABLE = True
+except ImportError:
+    XAI_AVAILABLE = False
+    XAIClient = None
 
 # Add parent directory to path to import test modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -62,73 +74,91 @@ else:
 if MCP_AVAILABLE:
     @app.list_tools()
     async def list_tools() -> list[Tool]:
-    """List available quantitative analysis tools"""
-    return [
-        Tool(
-            name="analyze_weather_markets",
-            description="Analyze weather markets using 3 statistical sources: NOAA (GFS), Open-Meteo (ECMWF), and Climatology. Returns market analysis with probabilities, edge calculations, and trading recommendations.",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "limit": {
-                        "type": "integer",
-                        "description": "Maximum number of markets to analyze (default: 10)",
-                        "default": 10
+        """List available quantitative analysis tools"""
+        return [
+            Tool(
+                name="analyze_weather_markets",
+                description="Analyze weather markets using 3 statistical sources: NOAA (GFS), Open-Meteo (ECMWF), and Climatology. Returns market analysis with probabilities, edge calculations, and trading recommendations.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "limit": {
+                            "type": "integer",
+                            "description": "Maximum number of markets to analyze (default: 10)",
+                            "default": 10
+                        }
                     }
                 }
-            }
-        ),
-        Tool(
-            name="analyze_politics_markets",
-            description="Analyze politics markets using 3 statistical sources: Kalshi Market Consensus, Historical Voting Patterns, and Betting Market Model. Returns market analysis with probabilities, edge calculations, and trading recommendations.",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "limit": {
-                        "type": "integer",
-                        "description": "Maximum number of markets to analyze (default: 10)",
-                        "default": 10
+            ),
+            Tool(
+                name="analyze_politics_markets",
+                description="Analyze politics markets using 3 statistical sources: Kalshi Market Consensus, Historical Voting Patterns, and Betting Market Model. Returns market analysis with probabilities, edge calculations, and trading recommendations.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "limit": {
+                            "type": "integer",
+                            "description": "Maximum number of markets to analyze (default: 10)",
+                            "default": 10
+                        }
                     }
                 }
-            }
-        ),
-        Tool(
-            name="analyze_economics_markets",
-            description="Analyze economics markets using 3 statistical sources: FRED (Federal Reserve), Economic Indicators (Alpha Vantage/BLS/World Bank), and Kalshi Market Consensus. Returns market analysis with probabilities, edge calculations, and trading recommendations.",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "limit": {
-                        "type": "integer",
-                        "description": "Maximum number of markets to analyze (default: 10)",
-                        "default": 10
+            ),
+            Tool(
+                name="analyze_economics_markets",
+                description="Analyze economics markets using 3 statistical sources: FRED (Federal Reserve), Economic Indicators (Alpha Vantage/BLS/World Bank), and Kalshi Market Consensus. Returns market analysis with probabilities, edge calculations, and trading recommendations.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "limit": {
+                            "type": "integer",
+                            "description": "Maximum number of markets to analyze (default: 10)",
+                            "default": 10
+                        }
                     }
                 }
-            }
-        ),
-        Tool(
-            name="analyze_single_market",
-            description="Analyze a single market by ticker. Automatically determines category (weather/politics/economics) and uses appropriate quantitative sources.",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "ticker": {
-                        "type": "string",
-                        "description": "Kalshi market ticker (e.g., 'KXHIGHNY-25NOV08-T71')"
-                    }
-                },
-                "required": ["ticker"]
-            }
-        ),
-        Tool(
-            name="get_market_categories",
-            description="Get available market categories and their quantitative sources",
-            inputSchema={
-                "type": "object",
-                "properties": {}
-            }
-        )
-    ]
+            ),
+            Tool(
+                name="analyze_single_market",
+                description="Analyze a single market by ticker. Automatically determines category (weather/politics/economics) and uses appropriate quantitative sources.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "ticker": {
+                            "type": "string",
+                            "description": "Kalshi market ticker (e.g., 'KXHIGHNY-25NOV08-T71')"
+                        }
+                    },
+                    "required": ["ticker"]
+                }
+            ),
+            Tool(
+                name="get_market_categories",
+                description="Get available market categories and their quantitative sources",
+                inputSchema={
+                    "type": "object",
+                    "properties": {}
+                }
+            ),
+            Tool(
+                name="sentiment_analysis",
+                description="Analyze X (Twitter) sentiment for a specific Kalshi market using Grok. Searches X for what people are saying about the market topic and returns JSON with sentiment score, key themes, trends, and market impact analysis.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "market_title": {
+                            "type": "string",
+                            "description": "The title/description of the market to analyze sentiment for"
+                        },
+                        "market_ticker": {
+                            "type": "string",
+                            "description": "Optional ticker symbol for the market"
+                        }
+                    },
+                    "required": ["market_title"]
+                }
+            )
+        ]
 
 # ============================================================================
 # Tool Implementations
@@ -163,7 +193,15 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
     elif name == "get_market_categories":
         result = get_market_categories()
         return [TextContent(type="text", text=json.dumps(result, indent=2))]
-    
+
+    elif name == "sentiment_analysis":
+        market_title = arguments.get("market_title")
+        market_ticker = arguments.get("market_ticker")
+        if not market_title:
+            return [TextContent(type="text", text=json.dumps({"error": "market_title is required"}, indent=2))]
+        result = await sentiment_analysis(market_title, market_ticker)
+        return [TextContent(type="text", text=json.dumps(result, indent=2))]
+
     else:
         return [TextContent(type="text", text=json.dumps({"error": f"Unknown tool: {name}"}, indent=2))]
 
@@ -530,6 +568,102 @@ def get_market_categories() -> dict:
         ],
         "methodology": "All sources use statistical/quantitative methods only (no sentiment analysis)"
     }
+
+async def sentiment_analysis(market_title: str, market_ticker: str = None) -> dict:
+    """
+    Analyze X (Twitter) sentiment for a specific Kalshi market using Grok
+
+    Args:
+        market_title: The title/description of the market
+        market_ticker: Optional ticker symbol for the market
+
+    Returns:
+        dict: JSON response with sentiment analysis
+    """
+    try:
+        if not XAI_AVAILABLE:
+            return {
+                "status": "error",
+                "error": "xai_sdk not available",
+                "message": "Could not import xai_sdk. Install with: pip install xai-sdk"
+            }
+
+        # Get API key from environment
+        api_key = os.getenv("X_API_KEY")
+        if not api_key:
+            return {
+                "status": "error",
+                "error": "X_API_KEY not set",
+                "message": "X_API_KEY environment variable is not set"
+            }
+
+        # Initialize Grok client
+        from xai_sdk.chat import user, system
+
+        client = XAIClient(api_key=api_key)
+
+        # Create system prompt for sentiment analysis
+        system_prompt = """You are a sentiment analysis expert with access to X (Twitter) data.
+Your job is to analyze what people are saying on X about specific topics related to prediction markets.
+
+When given a market topic, you should search X for relevant posts and discussions, then respond ONLY with a JSON object in this exact format:
+{
+  "sentiment_score": <number 0-100>,
+  "sentiment_label": "<positive/negative/neutral>",
+  "key_themes": ["theme1", "theme2", "theme3"],
+  "notable_trends": ["trend1", "trend2"],
+  "market_impact": "<brief analysis of how sentiment affects market>",
+  "confidence": "<high/medium/low>"
+}
+
+Do not include any text outside the JSON object."""
+
+        # Create user prompt with market information
+        if market_ticker:
+            user_prompt = f"""Search X (Twitter) for sentiment about this Kalshi prediction market:
+
+Market: {market_title}
+Ticker: {market_ticker}
+
+Return ONLY a JSON object with sentiment analysis."""
+        else:
+            user_prompt = f"""Search X (Twitter) for sentiment about this Kalshi prediction market:
+
+Market: {market_title}
+
+Return ONLY a JSON object with sentiment analysis."""
+
+        # Create chat and send message
+        chat = client.chat.create(model="grok-4-fast")
+        chat.append(system(system_prompt))
+        chat.append(user(user_prompt))
+
+        # Get response
+        response = chat.sample()
+        grok_response = response.content
+
+        # Try to parse as JSON
+        try:
+            result = json.loads(grok_response)
+            result["status"] = "success"
+            result["ticker"] = market_ticker
+            result["title"] = market_title
+            return result
+        except json.JSONDecodeError:
+            return {
+                "status": "error",
+                "error": "Invalid JSON response",
+                "ticker": market_ticker,
+                "title": market_title,
+                "raw_response": grok_response
+            }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "message": f"Error calling Grok API: {e}"
+        }
 
 # ============================================================================
 # Main Entry Point
