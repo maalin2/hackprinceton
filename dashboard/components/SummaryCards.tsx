@@ -3,8 +3,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePortfolio } from "@/lib/usePortfolio";
 import { formatCurrency, formatPercent } from "@/lib/utils";
-import { TrendingUp, TrendingDown, Activity, DollarSign } from "lucide-react";
+import { TrendingUp, TrendingDown, Activity, DollarSign, Info } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export function SummaryCards() {
   const { kpis, loading } = usePortfolio();
@@ -28,31 +36,33 @@ export function SummaryCards() {
 
   const cards = [
     {
-      title: "Total Equity",
+      title: "Account Worth",
       value: formatCurrency(kpis.totalEquity),
       icon: DollarSign,
-      description: "Current portfolio value",
+      infoTitle: "Account Value",
+      infoDescription: "This is the total current value of your trading account, including all open positions and available cash. It represents your portfolio's worth at this moment.",
     },
     {
-      title: "24h P&L",
+      title: "Today's Profit",
       value: formatCurrency(kpis.pnl24h),
       icon: kpis.pnl24h >= 0 ? TrendingUp : TrendingDown,
-      description: `${kpis.pnl24h >= 0 ? "+" : ""}${formatPercent(
-        kpis.pnl24h / (kpis.totalEquity - kpis.pnl24h)
-      )}`,
       positive: kpis.pnl24h >= 0,
+      infoTitle: "Today's Profit",
+      infoDescription: "The profit or loss generated in the last 24 hours. A positive value (green) indicates gains, while a negative value (red) indicates losses. The percentage shows the change relative to yesterday's account value.",
     },
     {
-      title: "Win Rate",
+      title: "Success Rate",
       value: formatPercent(kpis.winRate),
       icon: Activity,
-      description: "All-time win percentage",
+      infoTitle: "Success Rate",
+      infoDescription: "The percentage of your trades that were profitable across your entire trading history. A higher success rate indicates more consistent winning trades, though it doesn't account for the size of wins versus losses.",
     },
     {
-      title: "Open Risk",
+      title: "Invested Now",
       value: formatCurrency(kpis.openRisk),
       icon: TrendingUp,
-      description: "Capital in open positions",
+      infoTitle: "Invested Now",
+      infoDescription: "The total amount of capital currently allocated to active trading positions. This shows how much of your account value is actively invested in the market right now versus sitting in cash.",
     },
   ];
 
@@ -61,7 +71,25 @@ export function SummaryCards() {
       {cards.map((card, index) => (
         <Card key={index} className="hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button className="text-muted-foreground hover:text-foreground transition-colors">
+                    <Info className="h-3.5 w-3.5" />
+                    <span className="sr-only">More info about {card.title}</span>
+                  </button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>{card.infoTitle}</DialogTitle>
+                    <DialogDescription>
+                      {card.infoDescription}
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
+            </div>
             <card.icon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -76,7 +104,6 @@ export function SummaryCards() {
             >
               {card.value}
             </div>
-            <p className="text-xs text-muted-foreground">{card.description}</p>
           </CardContent>
         </Card>
       ))}
