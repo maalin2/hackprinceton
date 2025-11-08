@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "quantitative-agent": {
+      "command": "python",
+      "args": [
+        "mcp_quantitative_agent/server.py"
+      ],
+      "cwd": "."
+    }
+  }
+}
+
