@@ -1,19 +1,43 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { SummaryCards } from "@/components/SummaryCards";
 import { PerformanceChart } from "@/components/PerformanceChart";
 import { PositionsTable } from "@/components/PositionsTable";
 import { PositionDrawer } from "@/components/PositionDrawer";
 import { AgentFeed } from "@/components/AgentFeed";
+import { useUserPreferences } from "@/lib/useUserPreferences";
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const { preferences, loading } = useUserPreferences();
+
+  useEffect(() => {
+    if (!loading && !preferences) {
+      router.replace("/onboarding");
+    }
+  }, [loading, preferences, router]);
+
+  if (loading || !preferences) {
+    return (
+      <div className="container py-6">
+        <div className="flex items-center justify-center h-96">
+          <p className="text-muted-foreground">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container py-6">
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Main Content */}
         <div className="flex-1 space-y-6">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
+            <h1 className="text-3xl font-bold mb-2">
+              Welcome back, {preferences.name}! 👋
+            </h1>
             <p className="text-muted-foreground">
               Monitor your portfolio performance and active positions
             </p>

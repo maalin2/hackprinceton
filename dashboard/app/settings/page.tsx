@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -11,15 +12,36 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useUIStore } from "@/store/ui";
 import { useTheme } from "next-themes";
 import { Settings as SettingsIcon, Moon, Sun, Save } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useRouter } from "next/navigation";
+import { useUserPreferences } from "@/lib/useUserPreferences";
 
 export default function SettingsPage() {
+  const router = useRouter();
   const { settings, updateSettings } = useUIStore();
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
+  const { preferences, loading } = useUserPreferences();
+
+  useEffect(() => {
+    if (!loading && !preferences) {
+      router.replace("/onboarding");
+    }
+  }, [loading, preferences, router]);
+
+  if (loading || !preferences) {
+    return (
+      <div className="container py-6">
+        <div className="flex items-center justify-center h-96">
+          <p className="text-muted-foreground">Loading your settings...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSave = () => {
     toast({
@@ -41,6 +63,31 @@ export default function SettingsPage() {
       </div>
 
       <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Profile</CardTitle>
+            <CardDescription>
+              Your name and preferred investment topics
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Name</Label>
+              <p className="mt-2 text-lg font-medium">{preferences.name}</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Top Topics</Label>
+              <div className="flex flex-wrap gap-2">
+                {preferences.topics.map((topic) => (
+                  <Badge key={topic} variant="secondary">
+                    {topic.charAt(0).toUpperCase() + topic.slice(1)}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Strategy Weights */}
         <Card>
           <CardHeader>

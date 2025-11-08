@@ -7,6 +7,7 @@ import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
+import { clearUserPreferences } from "@/lib/useUserPreferences";
 
 const routes = [
   { href: "/dashboard", label: "Dashboard" },
@@ -17,6 +18,11 @@ const routes = [
 export function TopNav() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
+
+  const handleSignOut = () => {
+    clearUserPreferences();
+    signOut({ callbackUrl: "/" });
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -56,7 +62,7 @@ export function TopNav() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => signOut({ callbackUrl: "/" })}
+            onClick={handleSignOut}
             className="gap-2"
           >
             <LogOut className="h-4 w-4" />

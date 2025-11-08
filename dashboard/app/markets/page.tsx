@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMarkets } from "@/lib/useMarkets";
 import { MarketCard } from "@/components/MarketCard";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,8 @@ import { Domain } from "@/lib/types";
 import { useUIStore } from "@/store/ui";
 import { Filter, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useRouter } from "next/navigation";
+import { useUserPreferences } from "@/lib/useUserPreferences";
 
 const domains: (Domain | "all")[] = [
   "all",
@@ -21,16 +23,34 @@ const domains: (Domain | "all")[] = [
 ];
 
 export default function MarketsPage() {
-  const { selectedDomain, setSelectedDomain, settings } = useUIStore();
+  const { selectedDomain, setSelectedDomain } = useUIStore();
   const [minEdge, setMinEdge] = useState<number>(0);
   const [maxSpread, setMaxSpread] = useState<number>(20);
   const [showFilters, setShowFilters] = useState(false);
+  const router = useRouter();
+  const { preferences, loading: prefsLoading } = useUserPreferences();
 
   const { markets, loading } = useMarkets({
     domain: selectedDomain === "all" ? undefined : selectedDomain,
     minEdge,
     maxSpread,
   });
+
+  useEffect(() => {
+    if (!prefsLoading && !preferences) {
+      router.replace("/onboarding");
+    }
+  }, [prefsLoading, preferences, router]);
+
+  if (prefsLoading || !preferences) {
+    return (
+      <div className="container py-6">
+        <div className="flex items-center justify-center h-96">
+          <p className="text-muted-foreground">Loading personalized markets...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container py-6">
@@ -40,6 +60,17 @@ export default function MarketsPage() {
           Browse active prediction markets and find trading opportunities
         </p>
       </div>
+
+      {preferences.topics.length > 0 && (
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          <span className="text-sm text-muted-foreground">Your interests:</span>
+          {preferences.topics.map((topic) => (
+            <Badge key={topic} variant="secondary">
+              {topic.charAt(0).toUpperCase() + topic.slice(1)}
+            </Badge>
+          ))}
+        </div>
+      )}
 
       {/* Domain Filters */}
       <div className="flex flex-wrap gap-2 mb-6">
