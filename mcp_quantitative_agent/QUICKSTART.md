@@ -48,6 +48,7 @@ python test_mcp.py
 ```
 
 Expected output:
+
 ```
 ================================================================================
 Testing MCP Quantitative Agent Server
@@ -88,6 +89,7 @@ npx @modelcontextprotocol/inspector python server_simple.py
 ```
 
 This opens a web interface where you can:
+
 - See all available tools
 - Call tools with parameters
 - View results visually
@@ -96,23 +98,24 @@ This opens a web interface where you can:
 ### 4. Integrate with Claude Desktop
 
 1. **Find config file:**
+
    - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
    - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
 2. **Add MCP server config:**
+
    ```json
    {
      "mcpServers": {
        "quantitative-agent": {
          "command": "python",
-         "args": [
-           "/full/path/to/mcp_quantitative_agent/server_simple.py"
-         ],
+         "args": ["/full/path/to/mcp_quantitative_agent/server_simple.py"],
          "cwd": "/full/path/to/mcp_quantitative_agent"
        }
      }
    }
    ```
+
    **Important:** Use absolute paths!
 
 3. **Restart Claude Desktop**
@@ -133,6 +136,7 @@ pip install mcp
 ### Issue: "Module not found: weather_test"
 
 Ensure test modules are in the parent directory:
+
 - `../weather_test.py`
 - `../politics_test.py`
 - `../economics_test.py`
@@ -176,4 +180,3 @@ python -c "from quantitative_agent import QuantitativeAgent; print('OK')"
 2. Verify all dependencies are installed
 3. Test standalone agent first
 4. Check server logs for errors
-
