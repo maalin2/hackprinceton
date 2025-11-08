@@ -51,7 +51,7 @@ export default function DashboardPage() {
     <div className="container py-6">
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Main Content */}
-        <div className="flex-1 space-y-6">
+        <div className="flex-1 space-y-6 min-w-0">
           <div>
             <h1 className="text-3xl font-bold mb-2">
               Welcome back, {preferences.name}! 👋
@@ -67,7 +67,7 @@ export default function DashboardPage() {
 
         {/* Agent Feed Sidebar */}
         <div className="lg:w-96 shrink-0">
-          <div className="sticky top-20">
+          <div className="sticky top-20 max-h-[calc(100vh-7rem)]">
             <AgentFeed />
           </div>
         </div>
