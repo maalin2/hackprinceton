@@ -71,7 +71,7 @@ export interface AgentRecommendation {
   action: "BUY_YES" | "BUY_NO" | "SELL_YES" | "SELL_NO" | "HOLD";
   edge: number;
   confidence: number;
-  rationale: string;
+  rationale?: string;
   priority: "high" | "medium" | "low";
   status: "pending" | "accepted" | "snoozed" | "dismissed";
 }
