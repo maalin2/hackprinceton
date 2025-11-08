@@ -26,6 +26,7 @@ python quantitative_agent.py categories
 ```
 
 Expected output:
+
 ```
 Available Categories:
 
@@ -64,6 +65,7 @@ pip install mcp
 ```
 
 Verify installation:
+
 ```bash
 python -c "import mcp; print('MCP installed successfully')"
 ```
@@ -95,31 +97,31 @@ from mcp.client.stdio import stdio_client
 
 async def test_mcp_server():
     """Test the MCP server"""
-    
+
     # Server parameters
     server_params = StdioServerParameters(
         command="python",
         args=["server_simple.py"],
         env=None
     )
-    
+
     # Create client session
     async with stdio_client(server_params) as (read, write):
         async with ClientSession(read, write) as session:
             # Initialize
             await session.initialize()
-            
+
             # List tools
             tools = await session.list_tools()
             print("Available tools:")
             for tool in tools.tools:
                 print(f"  - {tool.name}: {tool.description}")
-            
+
             # Test: Get categories
             print("\n=== Testing get_market_categories ===")
             result = await session.call_tool("get_market_categories", {})
             print(json.dumps(result.content, indent=2))
-            
+
             # Test: Analyze weather markets
             print("\n=== Testing analyze_weather_markets ===")
             result = await session.call_tool("analyze_weather_markets", {"limit": 2})
@@ -130,6 +132,7 @@ if __name__ == "__main__":
 ```
 
 Run the test:
+
 ```bash
 python test_mcp.py
 ```
@@ -151,6 +154,7 @@ npx @modelcontextprotocol/inspector python server_simple.py
 ```
 
 This will open a web interface where you can:
+
 - See available tools
 - Call tools with parameters
 - View results
@@ -161,11 +165,13 @@ This will open a web interface where you can:
 ### Step 6.1: Find Claude Desktop Config
 
 **macOS:**
+
 ```bash
 ~/Library/Application Support/Claude/claude_desktop_config.json
 ```
 
 **Windows:**
+
 ```
 %APPDATA%\Claude\claude_desktop_config.json
 ```
@@ -179,9 +185,7 @@ Edit the config file and add:
   "mcpServers": {
     "quantitative-agent": {
       "command": "python",
-      "args": [
-        "/full/path/to/mcp_quantitative_agent/server_simple.py"
-      ],
+      "args": ["/full/path/to/mcp_quantitative_agent/server_simple.py"],
       "cwd": "/full/path/to/mcp_quantitative_agent"
     }
   }
@@ -199,6 +203,7 @@ Edit the config file and add:
 ### Step 6.4: Test in Claude
 
 In Claude, you can now ask:
+
 - "Analyze weather markets"
 - "What are the available market categories?"
 - "Analyze the market KXHIGHNY-25NOV08-T71"
@@ -217,14 +222,17 @@ python server_simple.py
 ### Common Issues
 
 1. **Import Errors**
+
    - Ensure test modules are in parent directory
    - Check Python path is correct
 
 2. **MCP Not Found**
+
    - Install MCP: `pip install mcp`
    - Verify: `python -c "import mcp"`
 
 3. **Server Not Starting**
+
    - Check file permissions
    - Verify Python path in config
    - Check for syntax errors
@@ -249,41 +257,41 @@ from mcp.client.stdio import stdio_client
 
 async def test_all_tools():
     """Test all MCP tools"""
-    
+
     server_params = StdioServerParameters(
         command="python",
         args=["server_simple.py"],
         env=None
     )
-    
+
     async with stdio_client(server_params) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()
-            
+
             # Test 1: Get categories
             print("Test 1: get_market_categories")
             result = await session.call_tool("get_market_categories", {})
             print(f"  Status: {result.content[0].text[:100]}...")
-            
+
             # Test 2: Analyze weather markets
             print("Test 2: analyze_weather_markets")
             result = await session.call_tool("analyze_weather_markets", {"limit": 2})
             data = json.loads(result.content[0].text)
             print(f"  Status: {data.get('status')}")
             print(f"  Markets analyzed: {data.get('summary', {}).get('markets_analyzed', 0)}")
-            
+
             # Test 3: Analyze politics markets
             print("Test 3: analyze_politics_markets")
             result = await session.call_tool("analyze_politics_markets", {"limit": 2})
             data = json.loads(result.content[0].text)
             print(f"  Status: {data.get('status')}")
-            
+
             # Test 4: Analyze economics markets
             print("Test 4: analyze_economics_markets")
             result = await session.call_tool("analyze_economics_markets", {"limit": 2})
             data = json.loads(result.content[0].text)
             print(f"  Status: {data.get('status')}")
-            
+
             # Test 5: Analyze single market
             print("Test 5: analyze_single_market")
             result = await session.call_tool("analyze_single_market", {"ticker": "KXHIGHNY-25NOV08-T71"})
@@ -295,6 +303,7 @@ if __name__ == "__main__":
 ```
 
 Run:
+
 ```bash
 python test_all_tools.py
 ```
@@ -352,4 +361,3 @@ Once testing is complete:
 - [MCP Documentation](https://modelcontextprotocol.io)
 - [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)
 - [Claude Desktop MCP Guide](https://claude.ai/docs/mcp)
-

@@ -8,7 +8,17 @@ TZ     = pytz.timezone("America/New_York")
 VC_API_KEY = None  # Set to your key if you have one: "YOUR_KEY_HERE"
 
 # 1) Fetch some open WEATHER markets and build DataFrame
-def get_open_weather_markets():
+def get_open_weather_markets(sort_by_volume=True, limit=50):
+    """
+    Fetch all open weather markets from Kalshi in real-time.
+    
+    Args:
+        sort_by_volume: If True, sort by 24h volume (highest first)
+        limit: Maximum number of markets to return
+    
+    Returns:
+        DataFrame with open weather markets sorted by volume
+    """
     # Get series first
     r_series = requests.get(f"{KALSHI}/series", params={"limit":500}, timeout=15)
     r_series.raise_for_status()
@@ -22,20 +32,48 @@ def get_open_weather_markets():
                           and s.get("category", "") == "Climate and Weather")]
     
     all_markets = []
-    for series in weather_series[:10]:  # Check first 10 weather series
+    for series in weather_series[:20]:  # Check more series to get volume data
         r = requests.get(f"{KALSHI}/markets", 
                         params={"series_ticker": series["ticker"], "status":"open", "limit":100}, 
                         timeout=15)
         if r.status_code == 200:
             ms = r.json().get("markets", [])
-            all_markets.extend(ms)
+            # Filter for only ACTIVE markets (open for trading in real-time)
+            active_markets = [m for m in ms if m.get("status") == "active"]
+            all_markets.extend(active_markets)
     
     if not all_markets:
         print("⚠️  No active weather markets found. Weather markets may be closed for the season.")
         return pd.DataFrame()
     
-    df = pd.DataFrame(all_markets)[["ticker","title","yes_bid","yes_ask","last_price"]]
+    df = pd.DataFrame(all_markets)
+    
+    # Sort by volume (24h volume is best for real-time activity)
+    if sort_by_volume:
+        if "volume_24h" in df.columns:
+            df = df.sort_values("volume_24h", ascending=False)
+            print(f"📊 Sorted by 24h volume (highest volume first)")
+        elif "volume" in df.columns:
+            df = df.sort_values("volume", ascending=False)
+            print(f"📊 Sorted by total volume (highest volume first)")
+    
+    # Limit results
+    df = df.head(limit)
+    
+    # Select columns (include volume for visibility)
+    cols_to_keep = ["ticker","title","yes_bid","yes_ask","last_price"]
+    if "volume_24h" in df.columns:
+        cols_to_keep.append("volume_24h")
+    if "volume" in df.columns:
+        cols_to_keep.append("volume")
+    if "open_interest" in df.columns:
+        cols_to_keep.append("open_interest")
+    
+    df = df[[c for c in cols_to_keep if c in df.columns]]
     df["series"] = df["ticker"].str.split("-").str[0]
+    
+    print(f"✅ Found {len(df)} active weather markets (status=active, open for trading)")
+    
     return df
 
 # 2) Map series → lat/lon + kind

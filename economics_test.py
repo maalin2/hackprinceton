@@ -10,8 +10,17 @@ BLS_API_KEY = None  # Get from https://www.bls.gov/developers/api_signature.htm 
 WORLD_BANK_KEY = None  # World Bank API is free, no key needed (but can register for higher limits)
 
 # 1) Fetch open ECONOMICS markets from Kalshi
-def get_open_economics_markets():
-    """Fetch open economics markets from Kalshi"""
+def get_open_economics_markets(sort_by_volume=True, limit=50):
+    """
+    Fetch open economics markets from Kalshi in real-time.
+    
+    Args:
+        sort_by_volume: If True, sort by 24h volume (highest first)
+        limit: Maximum number of markets to return
+    
+    Returns:
+        DataFrame with open economics markets sorted by volume
+    """
     r_series = requests.get(f"{KALSHI}/series", params={"limit":500}, timeout=15)
     r_series.raise_for_status()
     all_series = r_series.json().get("series", [])
@@ -25,31 +34,50 @@ def get_open_economics_markets():
                           "unemployment" in s.get("ticker", "").lower()]
     
     all_markets = []
-    for series in economics_series[:20]:
+    for series in economics_series[:30]:  # Check more series for volume data
         r = requests.get(f"{KALSHI}/markets", 
                         params={"series_ticker": series["ticker"], "status":"open", "limit":100}, 
                         timeout=15)
         if r.status_code == 200:
             ms = r.json().get("markets", [])
-            all_markets.extend(ms)
+            # Filter for only ACTIVE markets (open for trading in real-time)
+            active_markets = [m for m in ms if m.get("status") == "active"]
+            all_markets.extend(active_markets)
     
     if not all_markets:
         print("⚠️  No active economics markets found.")
         return pd.DataFrame()
     
-    # Get available columns
-    available_cols = ["ticker","title","yes_bid","yes_ask","last_price"]
-    if all_markets:
-        sample_market = all_markets[0]
-        if "volume" in sample_market:
-            available_cols.append("volume")
-        if "volume_24h" in sample_market:
-            available_cols.append("volume_24h")
-        if "series_ticker" in sample_market:
-            available_cols.append("series_ticker")
+    df = pd.DataFrame(all_markets)
     
-    df = pd.DataFrame(all_markets)[available_cols]
+    # Sort by volume (24h volume is best for real-time activity)
+    if sort_by_volume:
+        if "volume_24h" in df.columns:
+            df = df.sort_values("volume_24h", ascending=False)
+            print(f"📊 Sorted by 24h volume (highest volume first)")
+        elif "volume" in df.columns:
+            df = df.sort_values("volume", ascending=False)
+            print(f"📊 Sorted by total volume (highest volume first)")
+    
+    # Limit results
+    df = df.head(limit)
+    
+    # Get available columns (include volume for visibility)
+    available_cols = ["ticker","title","yes_bid","yes_ask","last_price"]
+    if "volume_24h" in df.columns:
+        available_cols.append("volume_24h")
+    if "volume" in df.columns:
+        available_cols.append("volume")
+    if "open_interest" in df.columns:
+        available_cols.append("open_interest")
+    if "series_ticker" in df.columns:
+        available_cols.append("series_ticker")
+    
+    df = df[[c for c in available_cols if c in df.columns]]
     df["series"] = df["ticker"].str.split("-").str[0]
+    
+    print(f"✅ Found {len(df)} active economics markets (status=active, open for trading)")
+    
     return df
 
 # 2) Parse economics market to extract indicators and thresholds
