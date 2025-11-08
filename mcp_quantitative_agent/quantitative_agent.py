@@ -23,11 +23,29 @@ except ImportError as e:
     print(f"Error: Could not import test modules: {e}", file=sys.stderr)
     sys.exit(1)
 
+# Try to import strategy system
+try:
+    from strategies import get_strategy
+    STRATEGIES_AVAILABLE = True
+except ImportError:
+    STRATEGIES_AVAILABLE = False
+    print("Warning: Strategy system not available", file=sys.stderr)
+
 
 class QuantitativeAgent:
-    """Quantitative Market Analysis Agent"""
+    """Quantitative Market Analysis Agent with Strategy Support"""
     
-    def __init__(self):
+    def __init__(self, strategy: str = "statistical_arbitrage", **strategy_config):
+        """
+        Initialize agent with strategy selection
+        
+        Args:
+            strategy: Strategy name ('statistical_arbitrage', 'moving_average')
+            **strategy_config: Additional strategy configuration (e.g., ma_period=7)
+        """
+        self.strategy_name = strategy
+        self.strategy_config = strategy_config
+        
         self.categories = {
             "weather": {
                 "sources": ["NOAA (GFS)", "Open-Meteo (ECMWF)", "Climatology"],
@@ -217,18 +235,78 @@ class QuantitativeAgent:
 
 def main():
     """CLI interface for the quantitative agent"""
-    parser = argparse.ArgumentParser(description="Quantitative Market Analysis Agent")
-    parser.add_argument("command", choices=["analyze", "categories", "market"], help="Command to execute")
+    parser = argparse.ArgumentParser(description="Quantitative Market Analysis Agent with Strategy Support")
+    parser.add_argument("command", choices=["analyze", "categories", "market", "strategies"], help="Command to execute")
     parser.add_argument("--category", choices=["weather", "politics", "economics"], help="Category to analyze")
     parser.add_argument("--ticker", help="Market ticker to analyze")
     parser.add_argument("--limit", type=int, default=10, help="Maximum number of markets to analyze")
     parser.add_argument("--json", action="store_true", help="Output as JSON")
     
+    # Strategy options
+    parser.add_argument("--strategy", default="statistical_arbitrage", choices=["statistical_arbitrage", "moving_average"], help="Analysis strategy to use")
+    parser.add_argument("--ma-period", type=int, default=7, help="Moving average period (for moving_average strategy)")
+    parser.add_argument("--ma-type", choices=["sma", "ema"], default="sma", help="Moving average type")
+    parser.add_argument("--signal-type", choices=["mean_reversion", "trend_following"], default="mean_reversion", help="Signal type for MA")
+    
     args = parser.parse_args()
     
-    agent = QuantitativeAgent()
+    # Build strategy config
+    strategy_config = {}
+    if args.strategy == "moving_average":
+        strategy_config = {
+            "ma_period": args.ma_period,
+            "ma_type": args.ma_type,
+            "signal_type": args.signal_type,
+        }
     
-    if args.command == "categories":
+    agent = QuantitativeAgent(strategy=args.strategy, **strategy_config)
+    
+    if args.command == "strategies":
+        strategies_info = {
+            "available_strategies": [
+                {
+                    "name": "statistical_arbitrage",
+                    "description": "Multi-source comparison to find statistical arbitrage",
+                    "best_for": ["weather", "politics", "economics"],
+                    "requires": "External data sources (NOAA, FRED, etc.)"
+                },
+                {
+                    "name": "moving_average",
+                    "description": "Price trend analysis using moving averages",
+                    "best_for": ["politics", "economics"],
+                    "requires": "Historical price data from Kalshi",
+                    "parameters": {
+                        "ma_period": "Moving average window (default: 7 days)",
+                        "ma_type": "sma or ema (default: sma)",
+                        "signal_type": "mean_reversion or trend_following (default: mean_reversion)"
+                    }
+                }
+            ],
+            "current_strategy": args.strategy,
+            "current_config": strategy_config
+        }
+        
+        if args.json:
+            print(json.dumps(strategies_info, indent=2))
+        else:
+            print("=" * 60)
+            print("AVAILABLE STRATEGIES")
+            print("=" * 60)
+            for strat in strategies_info["available_strategies"]:
+                marker = "✅" if strat["name"] == args.strategy else "  "
+                print(f"\n{marker} {strat['name'].upper()}")
+                print(f"  Description: {strat['description']}")
+                print(f"  Best for: {', '.join(strat['best_for'])}")
+                print(f"  Requires: {strat['requires']}")
+                if "parameters" in strat:
+                    print(f"  Parameters:")
+                    for param, desc in strat["parameters"].items():
+                        print(f"    --{param.replace('_', '-')}: {desc}")
+            print(f"\nCurrent Strategy: {args.strategy}")
+            if strategy_config:
+                print(f"Current Config: {strategy_config}")
+    
+    elif args.command == "categories":
         result = agent.get_categories()
         if args.json:
             print(json.dumps(result, indent=2))
@@ -248,7 +326,7 @@ def main():
         if args.json:
             print(json.dumps(result, indent=2))
         else:
-            print_analysis_result(result)
+            print_analysis_result(result, args.strategy, strategy_config)
     
     elif args.command == "market":
         if not args.ticker:
@@ -262,7 +340,7 @@ def main():
             print_market_result(result)
 
 
-def print_analysis_result(result: dict):
+def print_analysis_result(result: dict, strategy_name: str = "statistical_arbitrage", strategy_config: dict = None):
     """Print analysis result in human-readable format"""
     if result["status"] != "success":
         print(f"Status: {result['status']}")
@@ -270,6 +348,9 @@ def print_analysis_result(result: dict):
         return
     
     print(f"Category: {result['category'].upper()}")
+    print(f"Strategy: {strategy_name}")
+    if strategy_config:
+        print(f"Strategy Config: {strategy_config}")
     print(f"Sources: {', '.join(result['sources'])}")
     print(f"\nSummary:")
     summary = result["summary"]
