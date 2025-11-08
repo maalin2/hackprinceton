@@ -7,8 +7,16 @@ import { Badge } from "@/components/ui/badge";
 import { useAgentFeed } from "@/lib/useAgentFeed";
 import { useToast } from "@/components/ui/use-toast";
 import { formatPercent } from "@/lib/utils";
-import { Check, X, Clock, TrendingUp, TrendingDown } from "lucide-react";
+import { Check, X, Clock, TrendingUp, TrendingDown, Info } from "lucide-react";
 import { AgentRecommendation } from "@/lib/types";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 function RecommendationCard({ rec }: { rec: AgentRecommendation }) {
   const { acceptRecommendation, snoozeRecommendation, dismissRecommendation } =
@@ -110,8 +118,6 @@ function RecommendationCard({ rec }: { rec: AgentRecommendation }) {
           </div>
         </div>
 
-        <p className="text-xs text-muted-foreground">{rec.rationale}</p>
-
         <div className="flex gap-2">
           <Button size="sm" className="flex-1" onClick={handleAccept}>
             <Check className="h-3 w-3 mr-1" />
@@ -139,7 +145,41 @@ export function AgentFeed() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h3 className="text-lg font-semibold">Agent Recommendations</h3>
+          <h3 className="text-lg font-semibold">Active Trade Recs</h3>
+          <Dialog>
+            <DialogTrigger asChild>
+              <button className="text-muted-foreground hover:text-foreground transition-colors">
+                <Info className="h-4 w-4" />
+                <span className="sr-only">More info about Trade Recommendations</span>
+              </button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Trade Recommendations</DialogTitle>
+                <DialogDescription className="space-y-3">
+                  <p>
+                    Our AI analyzes markets in real-time and suggests next actions for the trades you are currently invested in. Here's what each part means:
+                  </p>
+                  <div className="space-y-2">
+                    <div>
+                      <strong className="text-foreground">AI thinks:</strong> This shows how confident our AI is that the event will happen. For example, "85% likely" means the AI believes there's an 85% chance this outcome will occur.
+                    </div>
+                    <div>
+                      <strong className="text-foreground">Current odds:</strong> This is what the market is currently pricing the event at. If there's a big difference between what the AI thinks and the current odds, that could be a good trading opportunity.
+                    </div>
+                    <div>
+                      <strong className="text-foreground">Actions:</strong>
+                      <ul className="list-disc list-inside ml-2 mt-1">
+                        <li><strong>Bet YES:</strong> Buy shares betting the event will happen</li>
+                        <li><strong>Bet NO:</strong> Buy shares betting against the event</li>
+                        <li><strong>Sell position:</strong> Close out an existing trade</li>
+                      </ul>
+                    </div>
+                  </div>
+                </DialogDescription>
+              </DialogHeader>
+            </DialogContent>
+          </Dialog>
           <div
             className={`h-2 w-2 rounded-full ${
               wsConnected ? "bg-green-500" : "bg-gray-400"

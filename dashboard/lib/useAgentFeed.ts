@@ -5,17 +5,6 @@ const domains: Domain[] = ["Politics", "Weather", "Crypto", "Sports"];
 const actions = ["BUY_YES", "BUY_NO", "SELL_YES", "SELL_NO", "HOLD"] as const;
 const priorities = ["high", "medium", "low"] as const;
 
-const rationales = [
-  "Our AI model sees strong upward momentum with high confidence in this prediction.",
-  "Weather forecast data shows a different outcome than what the market is pricing in.",
-  "Recent polling data indicates a major shift. This could be a good entry point.",
-  "Multiple technical signals are pointing in the same direction right now.",
-  "Social media sentiment is way off from market pricing. Could be an opportunity.",
-  "Several weather models agree on this outcome. Time to act on this signal.",
-  "Large investors appear to be moving into this position based on blockchain data.",
-  "Past patterns suggest this outcome is more likely than the market thinks.",
-];
-
 const tickers = [
   "KXHIGHPHIL-25NOV08-T71",
   "KXBTCD-25NOV1417-T99749",
@@ -47,7 +36,6 @@ function generateRecommendation(): AgentRecommendation {
     action: actions[Math.floor(Math.random() * actions.length)],
     edge: Math.random() * 0.5 + 0.05,
     confidence: Math.random() * 0.3 + 0.65,
-    rationale: rationales[Math.floor(Math.random() * rationales.length)],
     priority: priorities[Math.floor(Math.random() * priorities.length)],
     status: "pending",
   };
