@@ -1,23 +1,42 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { SummaryCards } from "@/components/SummaryCards";
 import { PerformanceChart } from "@/components/PerformanceChart";
 import { PositionsTable } from "@/components/PositionsTable";
 import { PositionDrawer } from "@/components/PositionDrawer";
 import { AgentFeed } from "@/components/AgentFeed";
-import { useUserPreferences } from "@/lib/useUserPreferences";
+import {
+  consumeSkipOnboardingRedirect,
+  useUserPreferences,
+} from "@/lib/useUserPreferences";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { preferences, loading } = useUserPreferences();
+  const skipRedirectRef = useRef(false);
 
   useEffect(() => {
     if (!loading && !preferences) {
+      if (!skipRedirectRef.current) {
+        const shouldSkip = consumeSkipOnboardingRedirect();
+        if (shouldSkip) {
+          skipRedirectRef.current = true;
+          return;
+        }
+      } else {
+        return;
+      }
       router.replace("/onboarding");
     }
   }, [loading, preferences, router]);
+
+  useEffect(() => {
+    if (preferences) {
+      skipRedirectRef.current = false;
+    }
+  }, [preferences]);
 
   if (loading || !preferences) {
     return (

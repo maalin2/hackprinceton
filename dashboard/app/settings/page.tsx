@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -18,7 +18,10 @@ import { useTheme } from "next-themes";
 import { Settings as SettingsIcon, Moon, Sun, Save } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
-import { useUserPreferences } from "@/lib/useUserPreferences";
+import {
+  consumeSkipOnboardingRedirect,
+  useUserPreferences,
+} from "@/lib/useUserPreferences";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -26,12 +29,28 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
   const { preferences, loading } = useUserPreferences();
+  const skipRedirectRef = useRef(false);
 
   useEffect(() => {
     if (!loading && !preferences) {
+      if (!skipRedirectRef.current) {
+        const shouldSkip = consumeSkipOnboardingRedirect();
+        if (shouldSkip) {
+          skipRedirectRef.current = true;
+          return;
+        }
+      } else {
+        return;
+      }
       router.replace("/onboarding");
     }
   }, [loading, preferences, router]);
+
+  useEffect(() => {
+    if (preferences) {
+      skipRedirectRef.current = false;
+    }
+  }, [preferences]);
 
   if (loading || !preferences) {
     return (

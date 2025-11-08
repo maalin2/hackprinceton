@@ -7,7 +7,10 @@ import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
-import { clearUserPreferences } from "@/lib/useUserPreferences";
+import {
+  clearUserPreferences,
+  markSkipOnboardingRedirect,
+} from "@/lib/useUserPreferences";
 
 const routes = [
   { href: "/dashboard", label: "Dashboard" },
@@ -20,6 +23,7 @@ export function TopNav() {
   const { theme, setTheme } = useTheme();
 
   const handleSignOut = () => {
+    markSkipOnboardingRedirect();
     clearUserPreferences();
     signOut({ callbackUrl: "/" });
   };

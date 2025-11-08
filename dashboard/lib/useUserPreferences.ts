@@ -8,6 +8,7 @@ export interface UserPreferences {
 
 const STORAGE_KEY = "kalshi-ai:user-preferences";
 const PREFERENCES_UPDATED_EVENT = "kalshi-ai:user-preferences-updated";
+const SKIP_ONBOARDING_KEY = "kalshi-ai:skip-onboarding-redirect";
 
 function readPreferencesFromStorage(): UserPreferences | null {
 	if (typeof window === "undefined") {
@@ -87,4 +88,26 @@ export function clearUserPreferences() {
 
 	window.localStorage.removeItem(STORAGE_KEY);
 	notifyPreferencesUpdated();
+}
+
+export function markSkipOnboardingRedirect() {
+	if (typeof window === "undefined") {
+		return;
+	}
+
+	window.sessionStorage.setItem(SKIP_ONBOARDING_KEY, "true");
+}
+
+export function consumeSkipOnboardingRedirect() {
+	if (typeof window === "undefined") {
+		return false;
+	}
+
+	const shouldSkip = window.sessionStorage.getItem(SKIP_ONBOARDING_KEY) === "true";
+
+	if (shouldSkip) {
+		window.sessionStorage.removeItem(SKIP_ONBOARDING_KEY);
+	}
+
+	return shouldSkip;
 }

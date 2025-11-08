@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMarkets } from "@/lib/useMarkets";
 import { MarketCard } from "@/components/MarketCard";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,10 @@ import { useUIStore } from "@/store/ui";
 import { Filter, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
-import { useUserPreferences } from "@/lib/useUserPreferences";
+import {
+  consumeSkipOnboardingRedirect,
+  useUserPreferences,
+} from "@/lib/useUserPreferences";
 
 const domains: (Domain | "all")[] = [
   "all",
@@ -29,6 +32,7 @@ export default function MarketsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const router = useRouter();
   const { preferences, loading: prefsLoading } = useUserPreferences();
+  const skipRedirectRef = useRef(false);
 
   const { markets, loading } = useMarkets({
     domain: selectedDomain === "all" ? undefined : selectedDomain,
@@ -38,9 +42,24 @@ export default function MarketsPage() {
 
   useEffect(() => {
     if (!prefsLoading && !preferences) {
+      if (!skipRedirectRef.current) {
+        const shouldSkip = consumeSkipOnboardingRedirect();
+        if (shouldSkip) {
+          skipRedirectRef.current = true;
+          return;
+        }
+      } else {
+        return;
+      }
       router.replace("/onboarding");
     }
   }, [prefsLoading, preferences, router]);
+
+  useEffect(() => {
+    if (preferences) {
+      skipRedirectRef.current = false;
+    }
+  }, [preferences]);
 
   if (prefsLoading || !preferences) {
     return (
