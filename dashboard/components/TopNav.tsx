@@ -1,11 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Moon, Sun, TrendingUp } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Moon, Sun, TrendingUp, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
+import {
+  clearUserPreferences,
+  markSkipOnboardingRedirect,
+} from "@/lib/useUserPreferences";
 
 const routes = [
   { href: "/dashboard", label: "Dashboard" },
@@ -15,7 +20,17 @@ const routes = [
 
 export function TopNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const { theme, setTheme } = useTheme();
+  const supabase = createClient();
+
+  const handleSignOut = async () => {
+    markSkipOnboardingRedirect();
+    clearUserPreferences();
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -23,7 +38,7 @@ export function TopNav() {
         <div className="mr-4 flex">
           <Link href="/dashboard" className="mr-6 flex items-center space-x-2">
             <TrendingUp className="h-6 w-6" />
-            <span className="hidden font-bold sm:inline-block">Kalshi AI</span>
+            <span className="hidden font-bold sm:inline-block">Magic Conch</span>
           </Link>
           <nav className="flex items-center space-x-6 text-sm font-medium">
             {routes.map((route) => (
@@ -51,6 +66,15 @@ export function TopNav() {
             <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             <span className="sr-only">Toggle theme</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleSignOut}
+            className="gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            <span className="hidden sm:inline">Sign Out</span>
           </Button>
         </div>
       </div>

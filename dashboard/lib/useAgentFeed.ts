@@ -6,14 +6,14 @@ const actions = ["BUY_YES", "BUY_NO", "SELL_YES", "SELL_NO", "HOLD"] as const;
 const priorities = ["high", "medium", "low"] as const;
 
 const rationales = [
-  "Strong momentum detected. Quant model 82% confidence.",
-  "NOAA forecast divergence from market price. High edge opportunity.",
-  "Polling data shows significant shift. Entry point favorable.",
-  "Technical indicators bullish. RSI + volume confirm.",
-  "Sentiment analysis shows 3.2σ deviation. Market mispricing.",
-  "Weather model consensus >70%. Immediate action recommended.",
-  "On-chain metrics indicate whale accumulation. Bullish signal.",
-  "Historical correlation suggests 68% win probability.",
+  "Our AI model sees strong upward momentum with high confidence in this prediction.",
+  "Weather forecast data shows a different outcome than what the market is pricing in.",
+  "Recent polling data indicates a major shift. This could be a good entry point.",
+  "Multiple technical signals are pointing in the same direction right now.",
+  "Social media sentiment is way off from market pricing. Could be an opportunity.",
+  "Several weather models agree on this outcome. Time to act on this signal.",
+  "Large investors appear to be moving into this position based on blockchain data.",
+  "Past patterns suggest this outcome is more likely than the market thinks.",
 ];
 
 const tickers = [
