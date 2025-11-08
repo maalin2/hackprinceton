@@ -68,17 +68,25 @@ export function useRecommendations() {
     
     try {
       // Convert Market to MarketLite for analysis
-      const marketsToAnalyze: MarketLite[] = markets.slice(0, 20).map((m) => ({
-        id: m.id,
-        ticker: m.ticker,
-        title: m.title,
-        series: m.series,
-        domain: m.domain,
-        yesBid: m.yesBid,
-        yesAsk: m.yesAsk,
-        lastPrice: m.lastPrice || (m.yesBid + m.yesAsk) / 2,
-        url: m.url,
-      }));
+      const marketsToAnalyze: MarketLite[] = markets.slice(0, 20).map((m) => {
+        // Ensure URL is always set (fallback to generated URL if missing)
+        const url = m.url || `https://kalshi.com/markets/${m.ticker}`;
+        return {
+          id: m.id,
+          ticker: m.ticker,
+          title: m.title,
+          series: m.series,
+          domain: m.domain,
+          yesBid: m.yesBid,
+          yesAsk: m.yesAsk,
+          lastPrice: m.lastPrice || (m.yesBid + m.yesAsk) / 2,
+          url,
+        };
+      });
+      
+      console.log(`[Recommendations] Analyzing ${marketsToAnalyze.length} markets with URLs:`, 
+        marketsToAnalyze.map(m => ({ ticker: m.ticker, url: m.url }))
+      );
 
       // Analyze each market in parallel
       const analyses = await Promise.all(

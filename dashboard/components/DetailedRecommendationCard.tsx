@@ -85,17 +85,19 @@ export function DetailedRecommendationCard({
         {/* Market Info */}
         <div>
           <p className="font-medium text-sm line-clamp-2">{market.title}</p>
-          <p className="text-xs text-muted-foreground mt-1">{market.ticker}</p>
-          <a
-            href={market.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline mt-1"
-            onClick={(e) => e.stopPropagation()}
-          >
-            View on Kalshi
-            <ExternalLink className="h-3 w-3" />
-          </a>
+          <div className="flex items-center gap-2 mt-1.5">
+            <p className="text-xs text-muted-foreground">{market.ticker}</p>
+            <a
+              href={market.url || `https://kalshi.com/markets/${market.ticker}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-950/50 rounded-md border border-blue-200 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-700 transition-colors"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <span>View on Kalshi</span>
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          </div>
         </div>
 
         {/* Decision Action */}
