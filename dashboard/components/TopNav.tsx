@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Moon, Sun, TrendingUp, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { signOut } from "next-auth/react";
+import { createClient } from "@/lib/supabase/client";
 import {
   clearUserPreferences,
   markSkipOnboardingRedirect,
@@ -20,12 +20,16 @@ const routes = [
 
 export function TopNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const { theme, setTheme } = useTheme();
+  const supabase = createClient();
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     markSkipOnboardingRedirect();
     clearUserPreferences();
-    signOut({ callbackUrl: "/" });
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
   };
 
   return (

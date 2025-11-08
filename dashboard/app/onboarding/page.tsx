@@ -62,7 +62,7 @@ export default function OnboardingPage() {
 		}
 	};
 
-	const handleComplete = () => {
+	const handleComplete = async () => {
 		if (selectedTopics.length !== MAX_TOPICS || !name.trim()) {
 			return;
 		}
@@ -75,8 +75,13 @@ export default function OnboardingPage() {
 			completedAt: new Date().toISOString(),
 		} as const;
 
-		saveUserPreferences(payload);
-		router.replace("/dashboard");
+		try {
+			await saveUserPreferences(payload);
+			router.replace("/dashboard");
+		} catch (error) {
+			console.error("Error saving preferences:", error);
+			setIsSubmitting(false);
+		}
 	};
 
 	if (loading || preferences) {

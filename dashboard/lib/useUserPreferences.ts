@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 export interface UserPreferences {
 	name: string;
@@ -6,88 +7,125 @@ export interface UserPreferences {
 	completedAt: string;
 }
 
-const STORAGE_KEY = "kalshi-ai:user-preferences";
-const PREFERENCES_UPDATED_EVENT = "kalshi-ai:user-preferences-updated";
 const SKIP_ONBOARDING_KEY = "kalshi-ai:skip-onboarding-redirect";
-
-function readPreferencesFromStorage(): UserPreferences | null {
-	if (typeof window === "undefined") {
-		return null;
-	}
-
-	const raw = window.localStorage.getItem(STORAGE_KEY);
-	if (!raw) {
-		return null;
-	}
-
-	try {
-		return JSON.parse(raw) as UserPreferences;
-	} catch (error) {
-		window.localStorage.removeItem(STORAGE_KEY);
-		return null;
-	}
-}
-
-function notifyPreferencesUpdated() {
-	if (typeof window === "undefined") {
-		return;
-	}
-
-	window.dispatchEvent(new Event(PREFERENCES_UPDATED_EVENT));
-}
 
 export function useUserPreferences() {
 	const [preferences, setPreferences] = useState<UserPreferences | null>(null);
 	const [loading, setLoading] = useState(true);
+	const supabase = createClient();
 
 	useEffect(() => {
-		if (typeof window === "undefined") {
-			setLoading(false);
-			return;
+		async function loadPreferences() {
+			try {
+				const {
+					data: { user },
+				} = await supabase.auth.getUser();
+
+				if (!user) {
+					setLoading(false);
+					return;
+				}
+
+				const { data, error } = await supabase
+					.from("user_preferences")
+					.select("*")
+					.eq("user_id", user.id)
+					.single();
+
+				if (error && error.code !== "PGRST116") {
+					// PGRST116 is "not found" error, which is fine
+					console.error("Error loading preferences:", error);
+				}
+
+				if (data) {
+					setPreferences({
+						name: data.name || "",
+						topics: data.topics || [],
+						completedAt: data.completed_at || "",
+					});
+				}
+			} catch (error) {
+				console.error("Error loading preferences:", error);
+			} finally {
+				setLoading(false);
+			}
 		}
 
-		const updateFromStorage = () => {
-			setPreferences(readPreferencesFromStorage());
-			setLoading(false);
-		};
+		loadPreferences();
 
-		const handleStorage = (event: StorageEvent) => {
-			if (event.key === STORAGE_KEY) {
-				updateFromStorage();
-			}
-		};
-
-		const handleCustom = () => updateFromStorage();
-
-		updateFromStorage();
-		window.addEventListener("storage", handleStorage);
-		window.addEventListener(PREFERENCES_UPDATED_EVENT, handleCustom);
+		// Listen for auth state changes
+		const {
+			data: { subscription },
+		} = supabase.auth.onAuthStateChange(() => {
+			loadPreferences();
+		});
 
 		return () => {
-			window.removeEventListener("storage", handleStorage);
-			window.removeEventListener(PREFERENCES_UPDATED_EVENT, handleCustom);
+			subscription.unsubscribe();
 		};
-	}, []);
+	}, [supabase]);
 
 	return { preferences, loading };
 }
 
-export function saveUserPreferences(data: UserPreferences) {
-	if (typeof window === "undefined") {
-		return;
-	}
+export async function saveUserPreferences(data: UserPreferences) {
+	const supabase = createClient();
 
-	window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-	notifyPreferencesUpdated();
+	try {
+		const {
+			data: { user },
+		} = await supabase.auth.getUser();
+
+		if (!user) {
+			console.error("No user logged in");
+			return;
+		}
+
+		const { error } = await supabase.from("user_preferences").upsert(
+			{
+				user_id: user.id,
+				name: data.name,
+				topics: data.topics,
+				completed_at: data.completedAt,
+			},
+			{
+				onConflict: "user_id",
+			}
+		);
+
+		if (error) {
+			console.error("Error saving preferences:", error);
+			throw error;
+		}
+	} catch (error) {
+		console.error("Error saving preferences:", error);
+		throw error;
+	}
 }
 
-export function clearUserPreferences() {
-	if (typeof window === "undefined") {
-		return;
-	}
+export async function clearUserPreferences() {
+	const supabase = createClient();
 
-	window.localStorage.removeItem(STORAGE_KEY);
-	notifyPreferencesUpdated();
+	try {
+		const {
+			data: { user },
+		} = await supabase.auth.getUser();
+
+		if (!user) {
+			return;
+		}
+
+		const { error } = await supabase
+			.from("user_preferences")
+			.delete()
+			.eq("user_id", user.id);
+
+		if (error) {
+			console.error("Error clearing preferences:", error);
+		}
+	} catch (error) {
+		console.error("Error clearing preferences:", error);
+	}
 }
 
 export function markSkipOnboardingRedirect() {
