@@ -26,10 +26,10 @@ async def test_mcp_server():
     
     # Get the directory of this script
     script_dir = Path(__file__).parent
-    server_script = script_dir / "server_simple.py"
-    
+    server_script = script_dir / "server.py"
+
     if not server_script.exists():
-        print(f"Error: server_simple.py not found at {server_script}")
+        print(f"Error: server.py not found at {server_script}")
         sys.exit(1)
     
     print("=" * 80)
@@ -148,7 +148,34 @@ async def test_mcp_server():
                 except Exception as e:
                     print(f"✗ Error: {e}")
                 print()
-                
+
+                # Test 6: Sentiment Analysis (Grok API test)
+                print("=" * 80)
+                print("Test 6: sentiment_analysis (Grok API test)")
+                print("=" * 80)
+                try:
+                    # Use a real market for testing
+                    result = await session.call_tool("sentiment_analysis", {
+                        "market_title": "Will the high temperature in New York City be above 70°F?",
+                        "market_ticker": "KXHIGHNY"
+                    })
+                    data = json.loads(result.content[0].text)
+                    print(f"✓ Status: {data.get('status')}")
+                    if data.get('status') == 'success':
+                        print(f"  Title: {data.get('title')}")
+                        print(f"  Ticker: {data.get('ticker')}")
+                        print(f"  Sentiment Score: {data.get('sentiment_score')}")
+                        print(f"  Sentiment Label: {data.get('sentiment_label')}")
+                        print(f"  Key Themes: {data.get('key_themes')}")
+                        print(f"  Market Impact: {data.get('market_impact')}")
+                        print(f"  Confidence: {data.get('confidence')}")
+                    else:
+                        print(f"  Error: {data.get('error', 'Unknown')}")
+                        print(f"  Message: {data.get('message', 'Unknown')}")
+                except Exception as e:
+                    print(f"✗ Error: {e}")
+                print()
+
                 print("=" * 80)
                 print("Testing Complete!")
                 print("=" * 80)
