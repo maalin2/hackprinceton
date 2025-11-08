@@ -4,6 +4,7 @@ import { quantAgent } from "./agents/quant";
 import { sentimentAgent } from "./agents/sentiment";
 import { decisionEngine } from "./agents/decision";
 import { useUIStore } from "@/store/ui";
+import { useMarkets } from "./useMarkets";
 
 export interface RecommendationWithMarket {
   market: MarketLite;
@@ -12,49 +13,10 @@ export interface RecommendationWithMarket {
   status: "pending" | "accepted" | "snoozed" | "dismissed";
 }
 
-// Mock markets for analysis
-const MOCK_MARKETS: MarketLite[] = [
-  {
-    id: "1",
-    ticker: "KXHIGHPHIL-25NOV08-T71",
-    title: "Will Philadelphia hit >71°F on Nov 8, 2025?",
-    series: "KXHIGHPHIL",
-    domain: "Weather",
-    yesBid: 1,
-    yesAsk: 3,
-    lastPrice: 2,
-  },
-  {
-    id: "2",
-    ticker: "KXBTCD-25NOV1417-T99749",
-    title: "Will Bitcoin price be >$99,749.99 on Nov 14, 2025?",
-    series: "KXBTCD",
-    domain: "Crypto",
-    yesBid: 67,
-    yesAsk: 74,
-    lastPrice: 70,
-  },
-  {
-    id: "3",
-    ticker: "KX2028DRUN-28-JOSS",
-    title: "Will Josh Shapiro run for 2028 Democratic nomination?",
-    series: "KX2028DRUN",
-    domain: "Politics",
-    yesBid: 30,
-    yesAsk: 40,
-    lastPrice: 35,
-  },
-  {
-    id: "4",
-    ticker: "KXNFLEXACTWINSHOU-25-9",
-    title: "Will Houston Texans win exactly 9 games this season?",
-    series: "KXNFLEXACTWINSHOU",
-    domain: "Sports",
-    yesBid: 8,
-    yesAsk: 39,
-    lastPrice: 23,
-  },
-];
+// Helper function to generate Kalshi market URL
+function getKalshiMarketUrl(ticker: string): string {
+  return `https://kalshi.com/markets/${ticker}`;
+}
 
 /**
  * Hook to manage multi-agent recommendations
@@ -64,6 +26,7 @@ export function useRecommendations() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const { settings } = useUIStore();
+  const { markets, loading: marketsLoading } = useMarkets({ limit: 50 }); // Get real markets
 
   useEffect(() => {
     // Update decision engine weights from settings
@@ -75,6 +38,12 @@ export function useRecommendations() {
   }, [settings]);
 
   useEffect(() => {
+    // Wait for markets to load
+    if (marketsLoading) {
+      setLoading(true);
+      return;
+    }
+
     // Initial analysis
     analyzeMarkets();
 
@@ -84,20 +53,36 @@ export function useRecommendations() {
     }, 60000);
 
     return () => clearInterval(interval);
-  }, [settings]);
+  }, [settings, markets, marketsLoading]);
 
   /**
    * Analyze markets and generate recommendations
    */
   const analyzeMarkets = async () => {
+    if (markets.length === 0) {
+      setLoading(false);
+      return;
+    }
+
     setProcessing(true);
     
     try {
-      const newRecommendations: RecommendationWithMarket[] = [];
+      // Convert Market to MarketLite for analysis
+      const marketsToAnalyze: MarketLite[] = markets.slice(0, 20).map((m) => ({
+        id: m.id,
+        ticker: m.ticker,
+        title: m.title,
+        series: m.series,
+        domain: m.domain,
+        yesBid: m.yesBid,
+        yesAsk: m.yesAsk,
+        lastPrice: m.lastPrice || (m.yesBid + m.yesAsk) / 2,
+        url: m.url,
+      }));
 
       // Analyze each market in parallel
       const analyses = await Promise.all(
-        MOCK_MARKETS.map(async (market) => {
+        marketsToAnalyze.map(async (market) => {
           try {
             // Run agents in parallel
             const [quantSignal, sentimentSignal] = await Promise.all([

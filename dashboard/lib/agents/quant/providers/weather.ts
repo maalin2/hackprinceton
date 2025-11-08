@@ -25,17 +25,24 @@ const LOCATION_COORDS: Record<string, { lat: number; lon: number; name: string }
 };
 
 function parseWeatherMarket(ticker: string, title: string): WeatherMarket | null {
-  // Parse ticker like: KXHIGHPHIL-25NOV08-T71
+  // Parse ticker format: KXHIGHPHIL-25NOV08-T71
+  // Format is: [TYPE][LOCATION]-[YY][MMM][DD]-T[threshold]
+  // Example: 25NOV08 = Year 2025, November, Day 08
   const match = ticker.match(/KX(HIGH|LOW|RAIN)(\w+?)-(\d{2})(\w{3})(\d{2})-T?(\d+\.?\d*)/);
   if (!match) return null;
 
-  const [, type, locationCode, day, month, year, threshold] = match;
+  const [, type, locationCode, yearShort, month, day, threshold] = match;
   const monthMap: Record<string, number> = {
     JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5,
     JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11
   };
 
-  const date = new Date(2000 + parseInt(year), monthMap[month.toUpperCase()], parseInt(day));
+  // Interpret 2-digit year (00-99)
+  // Assume 00-50 = 2000-2050, 51-99 = 1951-1999
+  const yearNum = parseInt(yearShort);
+  const fullYear = yearNum <= 50 ? 2000 + yearNum : 1900 + yearNum;
+  
+  const date = new Date(fullYear, monthMap[month.toUpperCase()], parseInt(day));
   const coords = LOCATION_COORDS[locationCode.toLowerCase()];
 
   if (!coords) {

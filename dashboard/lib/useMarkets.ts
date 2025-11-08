@@ -72,6 +72,9 @@ export function useMarkets(options: UseMarketsOptions = {}) {
           // Extract series from ticker
           const series = km.ticker?.split('-')[0] || km.series_ticker || "";
 
+          // Generate Kalshi market URL
+          const marketUrl = `https://kalshi.com/markets/${km.ticker}`;
+
           return {
             id: km.id || km.ticker,
             ticker: km.ticker,
@@ -90,6 +93,7 @@ export function useMarkets(options: UseMarketsOptions = {}) {
             openInterest: km.open_interest || 0,
             closeTime: km.close_time ? new Date(km.close_time) : new Date(),
             lastPrice: km.last_price,
+            url: marketUrl,
           };
         });
 

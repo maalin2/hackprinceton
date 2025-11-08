@@ -86,6 +86,16 @@ export function DetailedRecommendationCard({
         <div>
           <p className="font-medium text-sm line-clamp-2">{market.title}</p>
           <p className="text-xs text-muted-foreground mt-1">{market.ticker}</p>
+          <a
+            href={market.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline mt-1"
+            onClick={(e) => e.stopPropagation()}
+          >
+            View on Kalshi
+            <ExternalLink className="h-3 w-3" />
+          </a>
         </div>
 
         {/* Decision Action */}

@@ -12,8 +12,7 @@ export interface Tweet {
  * 
  * Options:
  * 1. Twitter API v2 (requires API key)
- * 2. Nitter (public Twitter scraper instances)
- * 3. Reddit as fallback (similar sentiment signal)
+ * 2. Reddit as fallback (similar sentiment signal)
  */
 export async function fetchTwitterPosts(searchQuery: string): Promise<Tweet[]> {
   // Try Twitter API first if key is available
@@ -21,22 +20,15 @@ export async function fetchTwitterPosts(searchQuery: string): Promise<Tweet[]> {
     try {
       return await fetchFromTwitterAPI(searchQuery);
     } catch (error) {
-      console.error("Twitter API failed, trying fallback:", error);
+      console.error("Twitter API failed, trying Reddit fallback:", error);
     }
   }
 
-  // Try Nitter (public Twitter mirror)
-  try {
-    return await fetchFromNitter(searchQuery);
-  } catch (error) {
-    console.error("Nitter failed, trying Reddit fallback:", error);
-  }
-
-  // Final fallback: Use Reddit posts as sentiment proxy
+  // Use Reddit posts as sentiment proxy (via our API to avoid CORS)
   try {
     return await fetchFromReddit(searchQuery);
   } catch (error) {
-    console.error("All Twitter/social fetch methods failed:", error);
+    console.error("All social fetch methods failed:", error);
     return [];
   }
 }
@@ -81,103 +73,50 @@ async function fetchFromTwitterAPI(searchQuery: string): Promise<Tweet[]> {
   return tweets.slice(0, 20);
 }
 
-// Method 2: Nitter (Twitter scraper mirror)
-async function fetchFromNitter(searchQuery: string): Promise<Tweet[]> {
-  // Nitter instances: nitter.net, nitter.it, nitter.poast.org
-  const nitterInstances = [
-    'https://nitter.net',
-    'https://nitter.poast.org',
-    'https://nitter.privacydev.net',
-  ];
-
-  for (const instance of nitterInstances) {
-    try {
-      const response = await fetch(
-        `${instance}/search?f=tweets&q=${encodeURIComponent(searchQuery)}`,
-        {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          },
-          timeout: 5000,
-        } as any
-      );
-
-      if (!response.ok) continue;
-
-      const html = await response.text();
-      
-      // Parse tweets from HTML (simplified parsing)
-      const tweets: Tweet[] = [];
-      const tweetRegex = /<div class="tweet-content media-body">([^<]+)<\/div>/g;
-      const authorRegex = /<a class="username" href="\/([^"]+)">/g;
-
-      let match;
-      let authorMatch;
-      let count = 0;
-
-      while ((match = tweetRegex.exec(html)) && (authorMatch = authorRegex.exec(html)) && count < 15) {
-        const text = match[1].trim().substring(0, 280);
-        const author = authorMatch[1];
-
-        if (text.length > 10) {
-          tweets.push({
-            id: `nitter-${Date.now()}-${count}`,
-            text,
-            timestamp: new Date(Date.now() - Math.random() * 86400000), // Random within last 24h
-            author: `@${author}`,
-            likes: Math.floor(Math.random() * 100),
-            url: `https://twitter.com/${author}/status/${Date.now()}`,
-          });
-          count++;
-        }
-      }
-
-      if (tweets.length > 0) {
-        return tweets;
-      }
-    } catch (error) {
-      console.warn(`Nitter instance ${instance} failed:`, error);
-      continue;
-    }
-  }
-
-  throw new Error("All Nitter instances failed");
-}
-
-// Method 3: Reddit fallback (similar sentiment signal)
+// Method 2: Reddit fallback (similar sentiment signal)
 async function fetchFromReddit(searchQuery: string): Promise<Tweet[]> {
-  // Search multiple relevant subreddits
+  // Search multiple relevant subreddits via our API proxy (avoids CORS)
   const subreddits = ['wallstreetbets', 'cryptocurrency', 'politics', 'news', 'sports'];
   const allPosts: Tweet[] = [];
 
   for (const subreddit of subreddits) {
     try {
+      // Use our Next.js API route to avoid CORS
       const response = await fetch(
-        `https://www.reddit.com/r/${subreddit}/search.json?q=${encodeURIComponent(searchQuery)}&restrict_sr=1&sort=hot&limit=20`,
-        {
-          headers: {
-            'User-Agent': 'KalshiDecisionDashboard/1.0',
-          },
-        }
+        `/api/reddit?subreddit=${subreddit}&q=${encodeURIComponent(searchQuery)}&limit=20`
       );
 
-      if (!response.ok) continue;
+      if (!response.ok) {
+        console.warn(`Reddit ${subreddit} returned ${response.status}`);
+        continue;
+      }
 
       const data = await response.json();
-      const posts = data.data?.children || [];
+      
+      // Check if this is a fallback response (Reddit API failed but returned 200)
+      if (data.fallback) {
+        console.warn(`Reddit ${subreddit} fallback:`, data.error);
+        continue;
+      }
+      
+      const posts = data.posts || [];
+
+      if (posts.length === 0) {
+        console.warn(`Reddit ${subreddit} returned no posts`);
+        continue;
+      }
 
       posts.forEach((post: any) => {
-        const postData = post.data;
-        const text = postData.title + (postData.selftext ? ` ${postData.selftext.substring(0, 200)}` : '');
+        const text = post.title + (post.text ? ` ${post.text.substring(0, 200)}` : '');
 
         if (text.length > 10) {
           allPosts.push({
-            id: postData.id,
+            id: post.id,
             text: text.substring(0, 280),
-            timestamp: new Date(postData.created_utc * 1000),
-            author: `u/${postData.author}`,
-            likes: postData.score || 0,
-            url: `https://reddit.com${postData.permalink}`,
+            timestamp: new Date(post.created * 1000),
+            author: `u/${post.author}`,
+            likes: post.score || 0,
+            url: `https://reddit.com${post.permalink}`,
           });
         }
       });

@@ -45,6 +45,8 @@ export interface Market {
   volume24h: number;
   openInterest: number;
   closeTime: Date;
+  lastPrice?: number; // Last trade price (optional)
+  url: string; // Link to Kalshi market page
 }
 
 export interface PortfolioSnapshot {
@@ -137,5 +139,6 @@ export interface MarketLite {
   yesBid: number;
   yesAsk: number;
   lastPrice: number;
+  url: string; // Link to Kalshi market page
 }
 

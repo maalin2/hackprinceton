@@ -154,7 +154,7 @@ export async function fetchPollingData(ticker: string, title: string): Promise<S
 // Social Mentions (using Twitter API alternative or Reddit)
 export async function fetchSocialMentions(ticker: string, title: string): Promise<SourceComponent> {
   try {
-    // Use Reddit API (no auth needed for read-only)
+    // Use Reddit API via our proxy (avoids CORS)
     const keywords = title.toLowerCase();
     let subreddit = "politics";
     
@@ -164,8 +164,7 @@ export async function fetchSocialMentions(ticker: string, title: string): Promis
     const searchQuery = title.split(' ').slice(0, 3).join(' ');
 
     const response = await fetch(
-      `https://www.reddit.com/r/${subreddit}/search.json?q=${encodeURIComponent(searchQuery)}&restrict_sr=1&sort=hot&limit=100`,
-      { headers: { "User-Agent": "KalshiDecisionDashboard/1.0" } }
+      `/api/reddit?subreddit=${subreddit}&q=${encodeURIComponent(searchQuery)}&limit=100`
     );
 
     if (!response.ok) {
@@ -173,7 +172,14 @@ export async function fetchSocialMentions(ticker: string, title: string): Promis
     }
 
     const data = await response.json();
-    const posts = data.data?.children || [];
+    
+    // Check if this is a fallback response (Reddit API failed but returned 200)
+    if (data.fallback) {
+      console.warn('Reddit fallback response:', data.error);
+      throw new Error(`Reddit API unavailable: ${data.error}`);
+    }
+    
+    const posts = data.posts || [];
 
     if (posts.length === 0) {
       throw new Error("No social mentions found");
@@ -184,9 +190,8 @@ export async function fetchSocialMentions(ticker: string, title: string): Promis
     let totalComments = 0;
 
     posts.forEach((post: any) => {
-      const postData = post.data;
-      totalScore += postData.score || 0;
-      totalComments += postData.num_comments || 0;
+      totalScore += post.score || 0;
+      totalComments += post.numComments || 0;
     });
 
     const avgScore = totalScore / posts.length;
@@ -196,7 +201,7 @@ export async function fetchSocialMentions(ticker: string, title: string): Promis
     const engagement = Math.min(1, (avgScore + avgComments) / 100);
 
     // Simple sentiment from upvote ratio
-    const upvoteRatios = posts.map((p: any) => p.data.upvote_ratio || 0.5);
+    const upvoteRatios = posts.map((p: any) => p.upvoteRatio || 0.5);
     const avgUpvoteRatio = upvoteRatios.reduce((a: number, b: number) => a + b, 0) / upvoteRatios.length;
 
     const probability = Math.max(0.25, Math.min(0.75, 0.3 + avgUpvoteRatio * 0.4));
