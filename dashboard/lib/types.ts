@@ -82,3 +82,60 @@ export interface UISettings {
   maxPositionSize: number;
 }
 
+// Multi-Agent System Types
+
+export interface SourceComponent {
+  source: string;
+  probability: number;
+  confidence: number;
+  data?: any;
+}
+
+export interface QuantSignal {
+  pQuant: number;
+  confidence: number;
+  sources: SourceComponent[];
+  timestamp: Date;
+}
+
+export interface SentimentSignal {
+  pSent: number;
+  confidence: number;
+  nSamples: number;
+  sources: {
+    kalshi: number;
+    twitter: number;
+  };
+  rawData?: {
+    comments: Array<{ text: string; author: string; url: string; timestamp: Date }>;
+    tweets: Array<{ text: string; author: string; url: string; likes: number; timestamp: Date }>;
+  };
+  timestamp: Date;
+}
+
+export interface Decision {
+  action: "BUY_YES" | "BUY_NO" | "HOLD";
+  pMarket: number;
+  pQuant: number;
+  pSent: number;
+  pCombined: number;
+  edge: number;
+  confidence: number;
+  rationale: string;
+  sources: string[];
+  quantSignal?: QuantSignal;
+  sentimentSignal?: SentimentSignal;
+  timestamp: Date;
+}
+
+export interface MarketLite {
+  id: string;
+  ticker: string;
+  title: string;
+  series: string;
+  domain: Domain;
+  yesBid: number;
+  yesAsk: number;
+  lastPrice: number;
+}
+
