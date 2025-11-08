@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-Get the Kalshi AI Trading Dashboard running in 3 minutes.
+Get the Magic Conch Trading Dashboard running in 3 minutes.
 
 ## Prerequisites
 
@@ -285,4 +285,4 @@ For questions or issues:
 3. Inspect browser console for errors
 4. Check `.env.local` file is properly configured
 
-Enjoy building with the Kalshi AI Trading Dashboard! 🚀
+Enjoy building with the Magic Conch Trading Dashboard! 🚀

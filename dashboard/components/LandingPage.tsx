@@ -77,7 +77,7 @@ export function LandingPage() {
           </div>
           
           <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
-            Kalshi AI Trading Dashboard
+            Magic Conch Trading Dashboard
           </h1>
           
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
@@ -152,7 +152,7 @@ export function LandingPage() {
       <footer className="border-t mt-16">
         <div className="container mx-auto px-4 py-8">
           <p className="text-center text-sm text-muted-foreground">
-            © 2025 Kalshi AI Trading Dashboard. All rights reserved.
+            © 2025 Magic Conch Trading Dashboard. All rights reserved.
           </p>
         </div>
       </footer>

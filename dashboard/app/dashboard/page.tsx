@@ -3,7 +3,6 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { SummaryCards } from "@/components/SummaryCards";
-import { PerformanceChart } from "@/components/PerformanceChart";
 import { PositionsTable } from "@/components/PositionsTable";
 import { PositionDrawer } from "@/components/PositionDrawer";
 import { AgentFeed } from "@/components/AgentFeed";
@@ -63,7 +62,6 @@ export default function DashboardPage() {
           </div>
 
           <SummaryCards />
-          <PerformanceChart />
           <PositionsTable />
         </div>
 

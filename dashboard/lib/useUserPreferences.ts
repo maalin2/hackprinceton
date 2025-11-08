@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 export interface UserPreferences {
@@ -9,20 +9,28 @@ export interface UserPreferences {
 
 const SKIP_ONBOARDING_KEY = "kalshi-ai:skip-onboarding-redirect";
 
+type LoadPreferencesOptions = {
+	silent?: boolean;
+};
+
 export function useUserPreferences() {
 	const [preferences, setPreferences] = useState<UserPreferences | null>(null);
 	const [loading, setLoading] = useState(true);
 	const supabase = createClient();
 
-	useEffect(() => {
-		async function loadPreferences() {
+	const loadPreferences = useCallback(
+		async ({ silent = false }: LoadPreferencesOptions = {}) => {
+			if (!silent) {
+				setLoading(true);
+			}
+
 			try {
 				const {
 					data: { user },
 				} = await supabase.auth.getUser();
 
 				if (!user) {
-					setLoading(false);
+					setPreferences(null);
 					return;
 				}
 
@@ -43,14 +51,20 @@ export function useUserPreferences() {
 						topics: data.topics || [],
 						completedAt: data.completed_at || "",
 					});
+				} else {
+					setPreferences(null);
 				}
 			} catch (error) {
 				console.error("Error loading preferences:", error);
+				setPreferences(null);
 			} finally {
 				setLoading(false);
 			}
-		}
+		},
+		[supabase]
+	);
 
+	useEffect(() => {
 		loadPreferences();
 
 		// Listen for auth state changes
@@ -63,9 +77,11 @@ export function useUserPreferences() {
 		return () => {
 			subscription.unsubscribe();
 		};
-	}, [supabase]);
+	}, [loadPreferences, supabase]);
 
-	return { preferences, loading };
+	const refreshPreferences = useCallback(() => loadPreferences({ silent: true }), [loadPreferences]);
+
+	return { preferences, loading, refreshPreferences };
 }
 
 export async function saveUserPreferences(data: UserPreferences) {

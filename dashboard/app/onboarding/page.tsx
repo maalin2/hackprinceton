@@ -12,19 +12,10 @@ import {
 	saveUserPreferences,
 	useUserPreferences,
 } from "@/lib/useUserPreferences";
-
-const TOPICS = [
-	{ id: "politics", name: "Politics", emoji: "🗳️" },
-	{ id: "weather", name: "Weather", emoji: "🌤️" },
-	{ id: "crypto", name: "Crypto", emoji: "₿" },
-	{ id: "sports", name: "Sports", emoji: "⚽" },
-	{ id: "finance", name: "Finance", emoji: "💰" },
-	{ id: "technology", name: "Technology", emoji: "💻" },
-	{ id: "entertainment", name: "Entertainment", emoji: "🎬" },
-	{ id: "economics", name: "Economics", emoji: "📈" },
-];
-
-const MAX_TOPICS = 3;
+import {
+	MAX_PREFERENCE_TOPICS,
+	PREFERENCE_TOPICS,
+} from "@/lib/preferenceTopics";
 
 export default function OnboardingPage() {
 	const router = useRouter();
@@ -47,7 +38,7 @@ export default function OnboardingPage() {
 				return current.filter((id) => id !== topicId);
 			}
 
-			if (current.length >= MAX_TOPICS) {
+			if (current.length >= MAX_PREFERENCE_TOPICS) {
 				return current;
 			}
 
@@ -63,7 +54,7 @@ export default function OnboardingPage() {
 	};
 
 	const handleComplete = async () => {
-		if (selectedTopics.length !== MAX_TOPICS || !name.trim()) {
+		if (selectedTopics.length !== MAX_PREFERENCE_TOPICS || !name.trim()) {
 			return;
 		}
 
@@ -94,7 +85,7 @@ export default function OnboardingPage() {
 				<div className="text-center mb-8">
 					<div className="flex items-center justify-center gap-2 mb-4">
 						<TrendingUp className="h-8 w-8 text-primary" />
-						<h1 className="text-2xl font-bold">Welcome to Kalshi AI</h1>
+						<h1 className="text-2xl font-bold">Welcome to Magic Conch</h1>
 					</div>
 					<p className="text-muted-foreground">
 						Let&apos;s personalize your trading experience
@@ -151,7 +142,7 @@ export default function OnboardingPage() {
 					<div className="space-y-6">
 						<div className="space-y-2">
 							<Label className="text-lg">
-								Select your top {MAX_TOPICS} topics
+								Select your top {MAX_PREFERENCE_TOPICS} topics
 							</Label>
 							<p className="text-sm text-muted-foreground">
 								We&apos;ll use these to tailor market recommendations
@@ -159,9 +150,10 @@ export default function OnboardingPage() {
 						</div>
 
 						<div className="grid grid-cols-2 gap-3">
-							{TOPICS.map((topic) => {
+							{PREFERENCE_TOPICS.map((topic) => {
 								const isSelected = selectedTopics.includes(topic.id);
-								const canSelect = isSelected || selectedTopics.length < MAX_TOPICS;
+								const canSelect =
+									isSelected || selectedTopics.length < MAX_PREFERENCE_TOPICS;
 
 								return (
 									<button
@@ -192,7 +184,7 @@ export default function OnboardingPage() {
 						</div>
 
 						<div className="text-center text-sm text-muted-foreground">
-							{selectedTopics.length}/{MAX_TOPICS} topics selected
+							{selectedTopics.length}/{MAX_PREFERENCE_TOPICS} topics selected
 						</div>
 
 						<div className="flex gap-3">
@@ -209,7 +201,7 @@ export default function OnboardingPage() {
 								type="button"
 								size="lg"
 								className="w-full"
-								disabled={selectedTopics.length !== MAX_TOPICS || isSubmitting}
+								disabled={selectedTopics.length !== MAX_PREFERENCE_TOPICS || isSubmitting}
 								onClick={handleComplete}
 							>
 								{isSubmitting ? "Saving..." : "Complete Setup"}

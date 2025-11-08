@@ -38,7 +38,7 @@ export function TopNav() {
         <div className="mr-4 flex">
           <Link href="/dashboard" className="mr-6 flex items-center space-x-2">
             <TrendingUp className="h-6 w-6" />
-            <span className="hidden font-bold sm:inline-block">Kalshi AI</span>
+            <span className="hidden font-bold sm:inline-block">Magic Conch</span>
           </Link>
           <nav className="flex items-center space-x-6 text-sm font-medium">
             {routes.map((route) => (

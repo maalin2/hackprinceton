@@ -16,9 +16,17 @@ import { usePositions } from "@/lib/usePositions";
 import { useUIStore } from "@/store/ui";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import { Position } from "@/lib/types";
-import { Search } from "lucide-react";
+import { Search, Info } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EdgeBadge } from "./EdgeBadge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export function PositionsTable() {
   const [search, setSearch] = useState("");
@@ -30,6 +38,27 @@ export function PositionsTable() {
       p.market.toLowerCase().includes(search.toLowerCase()) ||
       p.ticker.toLowerCase().includes(search.toLowerCase())
   );
+
+  // Helper to get status emoji
+  const getStatusEmoji = (pnl: number) => {
+    if (pnl > 0.5) return "🟢";
+    if (pnl < -0.5) return "🔴";
+    return "⚪";
+  };
+
+  // Helper to get status text
+  const getStatusText = (pnl: number) => {
+    if (pnl > 0.5) return "Winning";
+    if (pnl < -0.5) return "Losing";
+    return "Break-even";
+  };
+
+  // Helper to shorten market names
+  const shortenMarket = (market: string) => {
+    // Limit to 60 characters
+    if (market.length <= 60) return market;
+    return market.substring(0, 57) + "...";
+  };
 
   if (loading) {
     return (
@@ -48,7 +77,25 @@ export function PositionsTable() {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Open Positions</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle>Open Positions</CardTitle>
+            <Dialog>
+              <DialogTrigger asChild>
+                <button className="text-muted-foreground hover:text-foreground transition-colors">
+                  <Info className="h-4 w-4" />
+                  <span className="sr-only">More info about Open Positions</span>
+                </button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Open Positions</DialogTitle>
+                  <DialogDescription>
+                    These are your active trades - bets you've placed that haven't been closed yet. Think of them like stocks you currently own in your portfolio. Their value changes in real-time as market prices move up or down. You can click on any position to see more details or decide whether to hold or sell.
+                  </DialogDescription>
+                </DialogHeader>
+              </DialogContent>
+            </Dialog>
+          </div>
           <div className="relative w-64">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -67,11 +114,11 @@ export function PositionsTable() {
               <TableRow>
                 <TableHead>Market</TableHead>
                 <TableHead>Side</TableHead>
-                <TableHead className="text-right font-mono">Entry</TableHead>
-                <TableHead className="text-right font-mono">Mark</TableHead>
+                <TableHead className="text-right font-mono">Current Price</TableHead>
                 <TableHead className="text-right font-mono">Size</TableHead>
-                <TableHead className="text-right font-mono">P&L</TableHead>
-                <TableHead className="text-right">Edge</TableHead>
+                <TableHead className="text-right font-mono">Profit/Loss</TableHead>
+                <TableHead className="text-right">Opportunity Score</TableHead>
+                <TableHead className="text-center">Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -92,7 +139,7 @@ export function PositionsTable() {
                     onClick={() => setSelectedPositionId(position.id)}
                   >
                     <TableCell className="max-w-md truncate font-medium">
-                      {position.market}
+                      {shortenMarket(position.market)}
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -102,9 +149,6 @@ export function PositionsTable() {
                       >
                         {position.side}
                       </Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-mono">
-                      {formatPercent(position.entry)}
                     </TableCell>
                     <TableCell className="text-right font-mono">
                       {formatPercent(position.mark)}
@@ -123,6 +167,11 @@ export function PositionsTable() {
                     </TableCell>
                     <TableCell className="text-right">
                       <EdgeBadge edge={position.edge} />
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span title={getStatusText(position.pnl)}>
+                        {getStatusEmoji(position.pnl)}
+                      </span>
                     </TableCell>
                   </TableRow>
                 ))
