@@ -14,6 +14,9 @@ import {
 import { useUIStore } from "@/store/ui";
 import { Target, X } from "lucide-react";
 
+// Import test API utility (makes window.testAPI() available in console)
+import "@/lib/testAPI";
+
 export default function DashboardPage() {
   const router = useRouter();
   const { preferences, loading } = useUserPreferences();
@@ -70,10 +73,7 @@ export default function DashboardPage() {
               Swipe through AI-curated trading opportunities
             </p>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => setShowTradingDeck(false)}
-          >
+          <Button variant="outline" onClick={() => setShowTradingDeck(false)}>
             <X className="h-4 w-4 mr-2" />
             Back to Dashboard
           </Button>
@@ -118,7 +118,7 @@ export default function DashboardPage() {
           </Card>
 
           <SummaryCards />
-          
+
           <WeeklyTradingChart />
         </div>
       </div>
