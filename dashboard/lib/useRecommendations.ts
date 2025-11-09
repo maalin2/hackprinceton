@@ -103,7 +103,8 @@ export function useRecommendations() {
           action: opp.action === "BUY_YES" ? "BUY_YES" : "BUY_NO",
           pMarket: opp.market_prob,
           pQuant: opp.quant_prob,
-          pSent: opp.grok_sentiment?.score ? opp.grok_sentiment.score / 100 : 0.5,
+          pSent: opp.grok_sentiment?.status === 'success' ? 
+                 (opp.grok_sentiment.sentiment_score || opp.grok_sentiment.score || 50) / 100 : 0.5,
           pCombined: opp.quant_prob, // Use quant as combined for now
           edge: opp.quant_edge,
           confidence: opp.combined_confidence,
@@ -119,8 +120,8 @@ export function useRecommendations() {
             })),
             timestamp: new Date(opp.timestamp),
           },
-          sentimentSignal: opp.grok_sentiment ? {
-            pSent: opp.grok_sentiment.score / 100,
+          sentimentSignal: opp.grok_sentiment && opp.grok_sentiment.status === 'success' ? {
+            pSent: (opp.grok_sentiment.sentiment_score || opp.grok_sentiment.score || 50) / 100,
             confidence: opp.grok_sentiment.confidence === 'high' ? 0.8 : 
                        opp.grok_sentiment.confidence === 'medium' ? 0.6 : 0.4,
             nSamples: 1, // Grok is single analysis
@@ -131,7 +132,7 @@ export function useRecommendations() {
             rawData: {
               comments: [],
               tweets: [{
-                text: `Grok analysis: ${opp.grok_sentiment.label} (${opp.grok_sentiment.score}%)`,
+                text: `Grok analysis: ${opp.grok_sentiment.sentiment_label || opp.grok_sentiment.label || 'neutral'} (${opp.grok_sentiment.sentiment_score || opp.grok_sentiment.score || 50}%)`,
                 author: 'Grok AI',
                 url: opp.url,
                 likes: 0,
@@ -153,15 +154,33 @@ export function useRecommendations() {
       
       console.log(`\n🔄 Converting ${converted.length} recommendations to dashboard format...`);
       
-      // Log each recommendation
+      // Log each recommendation with detailed Grok status
       converted.forEach((rec, i) => {
+        const oppData = data.opportunities[i];
         console.log(`\n📌 Recommendation #${i + 1}:`);
         console.log(`   Ticker: ${rec.market.ticker}`);
         console.log(`   Market: ${rec.market.title.substring(0, 60)}...`);
         console.log(`   Action: ${rec.decision.action}`);
         console.log(`   📊 Quant Edge: ${(rec.decision.edge * 100).toFixed(1)}%`);
-        console.log(`   🤖 Grok Sentiment: ${rec.decision.sentimentSignal ? 
-          `${(rec.decision.pSent * 100).toFixed(0)}%` : 'N/A'}`);
+        
+        // Detailed Grok logging
+        if (oppData.grok_sentiment) {
+          const grok = oppData.grok_sentiment;
+          console.log(`   🤖 Grok Status: ${grok.status}`);
+          if (grok.status === 'success') {
+            console.log(`      └─ Sentiment: ${grok.sentiment_label || grok.label} (${grok.sentiment_score || grok.score}%)`);
+            console.log(`      └─ Confidence: ${grok.confidence}`);
+            if (grok.key_themes && grok.key_themes.length > 0) {
+              console.log(`      └─ Themes: ${grok.key_themes.slice(0, 3).join(', ')}`);
+            }
+          } else {
+            console.log(`      └─ Error: ${grok.error || grok.message || 'Unknown'}`);
+            console.log(`      └─ Using fallback: neutral (50%)`);
+          }
+        } else {
+          console.log(`   🤖 Grok Sentiment: NOT PRESENT IN DATA`);
+        }
+        
         console.log(`   🎯 Combined Confidence: ${(rec.decision.confidence * 100).toFixed(1)}%`);
         console.log(`   🔗 Kalshi: ${rec.market.url}`);
       });
