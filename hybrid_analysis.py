@@ -167,12 +167,14 @@ async def grok_sentiment_verification(opportunities: List[Dict[str, Any]]) -> Li
             
             # Print Grok result
             if sentiment.get('status') == 'success':
-                print(f"      ✅ Grok: {sentiment.get('label')} ({sentiment.get('score')}%)")
+                print(f"      ✅ Grok: {sentiment.get('sentiment_label', sentiment.get('label', 'neutral'))} ({sentiment.get('sentiment_score', sentiment.get('score', 50))}%)")
                 themes = sentiment.get('key_themes', [])
                 if themes:
                     print(f"      🏷️  Themes: {', '.join(themes[:3])}")
             else:
-                print(f"      ⚠️  Grok unavailable, using neutral sentiment")
+                print(f"      ⚠️  Grok failed: {sentiment.get('error', 'Unknown error')}")
+                print(f"         Message: {sentiment.get('message', 'No details available')}")
+                print(f"         Using neutral sentiment fallback (50%)")
             
             return opp
         except Exception as e:
