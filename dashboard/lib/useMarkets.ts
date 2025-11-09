@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import { Market, Domain } from "./types";
 
-const mockMarkets: Market[] = [
+// Python API backend URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+// Old mock markets (keeping for reference but not used)
+const DEPRECATED_mockMarkets: Market[] = [
   {
     id: "1",
     ticker: "KXHIGHPHIL-25NOV08-T71",
@@ -159,26 +163,97 @@ export function useMarkets(options: UseMarketsOptions = {}) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
+    const fetchRealMarkets = async () => {
+      setLoading(true);
+      console.log("\n🔍 useMarkets: Fetching REAL markets from Python API");
+      console.log(`   Domain filter: ${options.domain || 'all'}`);
+      console.log(`   Min edge: ${options.minEdge}`);
+      console.log(`   Max spread: ${options.maxSpread}`);
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/recommendations`);
+        
+        if (!response.ok) {
+          throw new Error(`API failed: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.status === "analyzing" || data.status === "empty") {
+          console.log(`   ⏳ ${data.status}: Waiting for analysis...`);
+          setMarkets([]);
+          setLoading(false);
+          return;
+        }
+        
+        // Convert recommendations to Market format
+        let convertedMarkets: Market[] = data.opportunities.map((opp: any) => {
+          const domain = opp.category as Domain;
+          const ticker = opp.ticker;
+          const marketProb = opp.market_prob * 100; // Convert to cents
+          
+          return {
+            id: ticker,
+            ticker: ticker,
+            title: opp.title,
+            domain: domain,
+            series: ticker.split('-')[0],
+            yesBid: Math.max(0, marketProb - 2),
+            yesAsk: Math.min(100, marketProb + 2),
+            noBid: Math.max(0, 100 - marketProb - 2),
+            noAsk: Math.min(100, 100 - marketProb + 2),
+            spread: 4, // Estimated spread
+            impliedProb: opp.market_prob,
+            combinedProb: opp.quant_prob,
+            edge: opp.quant_edge,
+            volume24h: 0, // Not available from current API
+            openInterest: 0, // Not available from current API
+            closeTime: new Date(opp.timestamp),
+            lastPrice: marketProb,
+            url: opp.url,
+          };
+        });
+        
+        console.log(`   ✅ Converted ${convertedMarkets.length} real markets from Python API`);
+        
+        // Apply filters
+        if (options.domain) {
+          convertedMarkets = convertedMarkets.filter((m) => m.domain === options.domain);
+          console.log(`   🔽 Filtered by domain "${options.domain}": ${convertedMarkets.length} markets`);
+        }
+        
+        if (options.minEdge !== undefined) {
+          convertedMarkets = convertedMarkets.filter((m) => Math.abs(m.edge) >= options.minEdge!);
+          console.log(`   🔽 Filtered by min edge ${options.minEdge}: ${convertedMarkets.length} markets`);
+        }
+        
+        if (options.maxSpread !== undefined) {
+          convertedMarkets = convertedMarkets.filter((m) => m.spread <= options.maxSpread!);
+          console.log(`   🔽 Filtered by max spread ${options.maxSpread}: ${convertedMarkets.length} markets`);
+        }
+        
+        // Sort by absolute edge (highest opportunities first)
+        convertedMarkets.sort((a, b) => Math.abs(b.edge) - Math.abs(a.edge));
+        
+        console.log(`   📊 Final count: ${convertedMarkets.length} markets`);
+        console.log(`   ✅ All markets are REAL from Python backend!\n`);
+        
+        setMarkets(convertedMarkets);
+        
+      } catch (error) {
+        console.error("❌ Error fetching markets from Python API:", error);
+        console.error("   Make sure api_server.py is running!");
+        setMarkets([]);
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    setTimeout(() => {
-      let filtered = mockMarkets;
-      
-      if (options.domain) {
-        filtered = filtered.filter((m) => m.domain === options.domain);
-      }
-      
-      if (options.minEdge !== undefined) {
-        filtered = filtered.filter((m) => m.edge >= options.minEdge);
-      }
-      
-      if (options.maxSpread !== undefined) {
-        filtered = filtered.filter((m) => m.spread <= options.maxSpread);
-      }
-      
-      setMarkets(filtered);
-      setLoading(false);
-    }, 250);
+    fetchRealMarkets();
+    
+    // Refresh every 5 minutes
+    const interval = setInterval(fetchRealMarkets, 300000);
+    return () => clearInterval(interval);
   }, [options.domain, options.minEdge, options.maxSpread]);
 
   return { markets, loading };

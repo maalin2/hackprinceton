@@ -47,6 +47,19 @@ function RecommendationCard({ rec }: { rec: AgentRecommendation }) {
     return Clock;
   };
 
+  const getActionText = () => {
+    if (rec.action === "BUY_YES") return "Bet YES";
+    if (rec.action === "BUY_NO") return "Bet NO";
+    if (rec.action === "SELL_YES") return "Sell YES position";
+    if (rec.action === "SELL_NO") return "Sell NO position";
+    return "Wait - don't trade yet";
+  };
+
+  // Calculate current market odds (inverse of AI confidence for display)
+  const currentOdds = rec.action.includes("YES")
+    ? Math.max(0.05, 1 - rec.edge - 0.1)
+    : Math.max(0.05, rec.edge + 0.1);
+
   const ActionIcon = getActionIcon();
 
   if (rec.status !== "pending") return null;
@@ -60,17 +73,9 @@ function RecommendationCard({ rec }: { rec: AgentRecommendation }) {
     >
       <Card className="p-4 space-y-3">
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs">
-              {rec.domain}
-            </Badge>
-            <Badge
-              variant={rec.priority === "high" ? "destructive" : "secondary"}
-              className="text-xs"
-            >
-              {rec.priority}
-            </Badge>
-          </div>
+          <Badge variant="outline" className="text-xs">
+            {rec.domain}
+          </Badge>
           <span className="text-xs text-muted-foreground">
             {rec.timestamp.toLocaleTimeString()}
           </span>
@@ -78,26 +83,38 @@ function RecommendationCard({ rec }: { rec: AgentRecommendation }) {
 
         <div>
           <p className="font-medium text-sm truncate">{rec.market}</p>
-          <p className="text-xs text-muted-foreground">{rec.ticker}</p>
+          <a
+            href={`https://kalshi.com/markets/${rec.ticker}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-primary hover:underline font-mono"
+          >
+            {rec.ticker} ↗
+          </a>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
             <ActionIcon className={`h-4 w-4 ${getActionColor()}`} />
             <span className={`font-semibold text-sm ${getActionColor()}`}>
-              {rec.action.replace("_", " ")}
+              {getActionText()}
             </span>
           </div>
-          <div className="text-xs">
-            <span className="text-muted-foreground">Edge: </span>
-            <span className="font-mono font-semibold">
-              {formatPercent(rec.edge)}
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="bg-muted/50 rounded p-2">
+            <span className="text-muted-foreground block mb-1">AI thinks:</span>
+            <span className="font-mono font-semibold text-sm">
+              {formatPercent(rec.confidence)} likely
             </span>
           </div>
-          <div className="text-xs">
-            <span className="text-muted-foreground">Conf: </span>
-            <span className="font-mono font-semibold">
-              {formatPercent(rec.confidence)}
+          <div className="bg-muted/50 rounded p-2">
+            <span className="text-muted-foreground block mb-1">
+              Current odds:
+            </span>
+            <span className="font-mono font-semibold text-sm">
+              {formatPercent(currentOdds)}
             </span>
           </div>
         </div>
