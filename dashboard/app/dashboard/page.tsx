@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SummaryCards } from "@/components/SummaryCards";
+import { WeeklyTradingChart } from "@/components/WeeklyTradingChart";
 import { TradingCardDeck } from "@/components/TradingCardDeck";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,6 +11,7 @@ import {
   consumeSkipOnboardingRedirect,
   useUserPreferences,
 } from "@/lib/useUserPreferences";
+import { useUIStore } from "@/store/ui";
 import { Target, X } from "lucide-react";
 
 export default function DashboardPage() {
@@ -17,6 +19,7 @@ export default function DashboardPage() {
   const { preferences, loading } = useUserPreferences();
   const skipRedirectRef = useRef(false);
   const [showTradingDeck, setShowTradingDeck] = useState(false);
+  const { setTradingDeckMode } = useUIStore();
 
   useEffect(() => {
     if (!loading && !preferences) {
@@ -38,6 +41,14 @@ export default function DashboardPage() {
       skipRedirectRef.current = false;
     }
   }, [preferences]);
+
+  // Update trading deck mode state
+  useEffect(() => {
+    setTradingDeckMode(showTradingDeck);
+    return () => {
+      setTradingDeckMode(false);
+    };
+  }, [showTradingDeck, setTradingDeckMode]);
 
   if (loading || !preferences) {
     return (
@@ -92,7 +103,7 @@ export default function DashboardPage() {
                   <h2 className="text-xl font-semibold">Start Trading</h2>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  5 new AI picks ready for review today
+                  New live picks ready for review!
                 </p>
               </div>
               <Button
@@ -107,6 +118,8 @@ export default function DashboardPage() {
           </Card>
 
           <SummaryCards />
+          
+          <WeeklyTradingChart />
         </div>
       </div>
     </div>

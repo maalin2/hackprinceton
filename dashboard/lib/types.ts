@@ -65,6 +65,7 @@ export interface TradingPickSentiment {
 export interface TradingPick {
   ticker: string;
   market_question?: string; // Optional human-readable market question
+  topic?: string; // Topic category (politics, weather, crypto, etc.)
   decision: "BUY" | "SHORT" | "PASS";
   technical_direction: "buy" | "short" | null;
   market_p: number; // 0.0-1.0 probability

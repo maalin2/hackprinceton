@@ -4,6 +4,7 @@ import { useState } from "react";
 import { SwipeCard } from "./SwipeCard";
 import { TradeModal } from "./TradeModal";
 import { useTradingPicks } from "@/lib/useTradingPicks";
+import { useSavedPicks } from "@/lib/useSavedPicks";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
@@ -20,19 +21,29 @@ export function TradingCardDeck() {
     handleSwipe,
     reset,
   } = useTradingPicks();
+  const { savePick } = useSavedPicks();
   const [tradeModalOpen, setTradeModalOpen] = useState(false);
   const { toast } = useToast();
 
-  const handleSwipeAction = (action: "pass" | "trade" | "save" | "dismiss") => {
+  const handleSwipeAction = async (action: "pass" | "trade" | "save" | "dismiss") => {
     if (action === "trade") {
       setTradeModalOpen(true);
     } else {
       handleSwipe(action);
-      if (action === "save") {
-        toast({
-          title: "Saved",
-          description: "Pick saved for later review",
-        });
+      if (action === "save" && currentPick) {
+        const success = await savePick(currentPick);
+        if (success) {
+          toast({
+            title: "Saved",
+            description: "Pick saved for later review",
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to save pick. Please try again.",
+            variant: "destructive",
+          });
+        }
       } else if (action === "dismiss") {
         toast({
           title: "Dismissed",
@@ -99,7 +110,7 @@ export function TradingCardDeck() {
   }
 
   return (
-    <div className="space-y-6">
+    <div>
       {/* Progress Bar */}
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm">
@@ -117,7 +128,7 @@ export function TradingCardDeck() {
       </div>
 
       {/* Swipe Card Stack */}
-      <div className="relative min-h-[600px] flex items-center justify-center">
+      <div className="relative min-h-[600px] flex items-start justify-center pt-4">
         {currentPick && (
           <SwipeCard
             pick={currentPick}

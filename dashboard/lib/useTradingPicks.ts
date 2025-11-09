@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { TradingPick } from "./types";
+import { useUserPreferences } from "./useUserPreferences";
 
 // Mock data generator - replace with actual API call
 const generateMockPicks = (): TradingPick[] => {
@@ -7,6 +8,7 @@ const generateMockPicks = (): TradingPick[] => {
     {
       ticker: "KXBTCD-25NOV1417-T99749",
       market_question: "Will Bitcoin hit >$99,749.99 on Nov 14, 2025?",
+      topic: "crypto",
       decision: "BUY",
       technical_direction: "buy",
       market_p: 0.65,
@@ -26,6 +28,7 @@ const generateMockPicks = (): TradingPick[] => {
     {
       ticker: "KXHIGHPHIL-25NOV08-T71",
       market_question: "Will Philadelphia hit >71°F on Nov 8, 2025?",
+      topic: "weather",
       decision: "BUY",
       technical_direction: "buy",
       market_p: 0.42,
@@ -45,6 +48,7 @@ const generateMockPicks = (): TradingPick[] => {
     {
       ticker: "KX2028DRUN-28-JOSS",
       market_question: "Will Josh Shapiro run for 2028 Democratic nomination?",
+      topic: "politics",
       decision: "PASS",
       technical_direction: null,
       market_p: 0.55,
@@ -64,6 +68,7 @@ const generateMockPicks = (): TradingPick[] => {
     {
       ticker: "KXETHMAX M-25DEC01-5200",
       market_question: "Will Ethereum hit >$5,200 by Dec 1, 2025?",
+      topic: "crypto",
       decision: "BUY",
       technical_direction: "buy",
       market_p: 0.38,
@@ -83,6 +88,7 @@ const generateMockPicks = (): TradingPick[] => {
     {
       ticker: "SENATEFL-28-R",
       market_question: "Will Republicans win FL Senate seat in 2028?",
+      topic: "politics",
       decision: "SHORT",
       technical_direction: "short",
       market_p: 0.68,
@@ -111,6 +117,7 @@ export interface CardState {
 }
 
 export function useTradingPicks() {
+  const { preferences } = useUserPreferences();
   const [picks, setPicks] = useState<TradingPick[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [reviewedCount, setReviewedCount] = useState(0);
@@ -122,11 +129,17 @@ export function useTradingPicks() {
     // Simulate API call
     setLoading(true);
     setTimeout(() => {
-      const mockPicks = generateMockPicks();
-      setPicks(mockPicks);
+      const allPicks = generateMockPicks();
+      
+      // Filter picks based on user's selected topics
+      const filteredPicks = preferences?.topics && preferences.topics.length > 0
+        ? allPicks.filter(pick => pick.topic && preferences.topics.includes(pick.topic))
+        : allPicks;
+      
+      setPicks(filteredPicks);
       setLoading(false);
     }, 500);
-  }, []);
+  }, [preferences]);
 
   const handleSwipe = (action: CardAction) => {
     if (currentIndex >= picks.length) return;
@@ -144,7 +157,11 @@ export function useTradingPicks() {
         setSavedPicks((prev) => [...prev, currentPick]);
         break;
       case "dismiss":
-        setDismissedTickers((prev) => new Set([...prev, currentPick.ticker]));
+        setDismissedTickers((prev) => {
+          const newSet = new Set(prev);
+          newSet.add(currentPick.ticker);
+          return newSet;
+        });
         break;
     }
 
@@ -173,7 +190,11 @@ export function useTradingPicks() {
     reset: () => {
       setCurrentIndex(0);
       setReviewedCount(0);
-      setPicks(generateMockPicks());
+      const allPicks = generateMockPicks();
+      const filteredPicks = preferences?.topics && preferences.topics.length > 0
+        ? allPicks.filter(pick => pick.topic && preferences.topics.includes(pick.topic))
+        : allPicks;
+      setPicks(filteredPicks);
     },
   };
 }

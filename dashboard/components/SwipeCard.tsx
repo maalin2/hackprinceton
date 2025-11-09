@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TradingPick } from "@/lib/types";
 import { formatPercent } from "@/lib/utils";
-import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown, X, Bookmark, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown, X, Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PREFERENCE_TOPICS } from "@/lib/preferenceTopics";
 
 interface SwipeCardProps {
   pick: TradingPick;
@@ -35,18 +36,14 @@ export function SwipeCard({ pick, onSwipe, index, total, tradeModalOpen = false 
     return { label: "Low", color: "text-red-600 dark:text-red-400" };
   };
 
-  const getMomentumIcon = () => {
-    switch (pick.momentum) {
-      case "bullish":
-        return <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />;
-      case "bearish":
-        return <TrendingDown className="h-4 w-4 text-red-600 dark:text-red-400" />;
-      default:
-        return <Minus className="h-4 w-4 text-muted-foreground" />;
-    }
+  const confidenceInfo = getConfidenceLabel(pick.final_confidence);
+
+  const getTopicInfo = () => {
+    if (!pick.topic) return null;
+    return PREFERENCE_TOPICS.find(t => t.id === pick.topic);
   };
 
-  const confidenceInfo = getConfidenceLabel(pick.final_confidence);
+  const topicInfo = getTopicInfo();
 
   const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const swipeDistance = Math.abs(info.offset.x);
@@ -117,6 +114,48 @@ export function SwipeCard({ pick, onSwipe, index, total, tradeModalOpen = false 
     }
   }, [tradeModalOpen, wasModalOpen, x, y]);
 
+  // Handle keyboard arrow keys
+  useEffect(() => {
+    if (tradeModalOpen || isExiting) return; // Don't handle keys when modal is open or card is exiting
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Only handle arrow keys
+      if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
+        return;
+      }
+
+      // Prevent default scrolling behavior
+      event.preventDefault();
+
+      switch (event.key) {
+        case "ArrowLeft":
+          // Pass
+          setIsExiting(true);
+          onSwipe("pass");
+          break;
+        case "ArrowRight":
+          // Trade
+          onSwipe("trade");
+          break;
+        case "ArrowUp":
+          // Save
+          setIsExiting(true);
+          onSwipe("save");
+          break;
+        case "ArrowDown":
+          // Dismiss
+          setIsExiting(true);
+          onSwipe("dismiss");
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [tradeModalOpen, isExiting, onSwipe]);
+
   return (
     <motion.div
       className="relative w-full mx-auto"
@@ -134,7 +173,7 @@ export function SwipeCard({ pick, onSwipe, index, total, tradeModalOpen = false 
       animate={isExiting ? { scale: 0.8, opacity: 0 } : { scale: 1, opacity: 1 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
-      <Card className="p-8 space-y-6 cursor-grab active:cursor-grabbing touch-none min-h-[500px]">
+      <Card className="p-6 pt-5 space-y-5 cursor-grab active:cursor-grabbing touch-none min-h-[480px]">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -142,10 +181,11 @@ export function SwipeCard({ pick, onSwipe, index, total, tradeModalOpen = false 
               💡 AI Pick #{index + 1} of {total}
             </Badge>
           </div>
-          <div className="flex items-center gap-2">
-            {getMomentumIcon()}
-            <span className="text-xs text-muted-foreground">{pick.momentum}</span>
-          </div>
+          {topicInfo && (
+            <Badge variant="secondary" className="text-xs">
+              {topicInfo.emoji} {topicInfo.name}
+            </Badge>
+          )}
         </div>
 
         {/* Market Question */}
@@ -218,37 +258,6 @@ export function SwipeCard({ pick, onSwipe, index, total, tradeModalOpen = false 
           </div>
         </div>
       </Card>
-
-      {/* Action Buttons (Desktop fallback) */}
-      <div className="hidden md:flex items-center justify-center gap-3 mt-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => handleButtonClick("pass")}
-          disabled={isExiting}
-        >
-          <X className="h-4 w-4 mr-1" />
-          Pass
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => handleButtonClick("save")}
-          disabled={isExiting}
-        >
-          <Bookmark className="h-4 w-4 mr-1" />
-          Save
-        </Button>
-        <Button
-          variant="default"
-          size="sm"
-          onClick={() => handleButtonClick("trade")}
-          disabled={isExiting}
-        >
-          Trade
-          <ArrowRight className="h-4 w-4 ml-1" />
-        </Button>
-      </div>
     </motion.div>
   );
 }

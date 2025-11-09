@@ -139,9 +139,6 @@ export function TradeModal({ pick, open, onOpenChange, onConfirm }: TradeModalPr
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
           <Button onClick={handleConfirm} disabled={!!error || !amount}>
             Confirm Trade
           </Button>

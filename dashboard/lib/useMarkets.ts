@@ -169,11 +169,11 @@ export function useMarkets(options: UseMarketsOptions = {}) {
       }
       
       if (options.minEdge !== undefined) {
-        filtered = filtered.filter((m) => m.edge >= options.minEdge);
+        filtered = filtered.filter((m) => m.edge >= options.minEdge!);
       }
       
       if (options.maxSpread !== undefined) {
-        filtered = filtered.filter((m) => m.spread <= options.maxSpread);
+        filtered = filtered.filter((m) => m.spread <= options.maxSpread!);
       }
       
       setMarkets(filtered);

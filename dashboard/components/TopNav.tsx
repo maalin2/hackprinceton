@@ -11,10 +11,12 @@ import {
   clearUserPreferences,
   markSkipOnboardingRedirect,
 } from "@/lib/useUserPreferences";
+import { useUIStore } from "@/store/ui";
 
 const routes = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/markets", label: "Markets" },
+  { href: "/saved", label: "Saved Picks" },
   { href: "/settings", label: "Settings" },
 ];
 
@@ -23,6 +25,7 @@ export function TopNav() {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const supabase = createClient();
+  const { isTradingDeckMode } = useUIStore();
 
   const handleSignOut = async () => {
     markSkipOnboardingRedirect();
@@ -31,6 +34,11 @@ export function TopNav() {
     router.push("/");
     router.refresh();
   };
+
+  // Hide nav when in trading deck mode
+  if (isTradingDeckMode) {
+    return null;
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
