@@ -684,6 +684,7 @@ async def sentiment_analysis(market_title: str, market_ticker: str = None) -> di
 
         # Initialize Grok client
         from xai_sdk.chat import user, system
+        from xai_sdk.tools import x_search
 
         client = XAIClient(api_key=api_key)
 
@@ -719,7 +720,10 @@ Market: {market_title}
 Return ONLY a JSON object with sentiment analysis."""
 
         # Create chat and send message
-        chat = client.chat.create(model="grok-4-fast")
+        chat = client.chat.create(
+                model="grok-4-fast",
+                tools=[x_search()],
+        )
         chat.append(system(system_prompt))
         chat.append(user(user_prompt))
 
