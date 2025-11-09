@@ -56,8 +56,8 @@ function RecommendationCard({ rec }: { rec: AgentRecommendation }) {
   };
 
   // Calculate current market odds (inverse of AI confidence for display)
-  const currentOdds = rec.action.includes("YES") 
-    ? Math.max(0.05, 1 - rec.edge - 0.1) 
+  const currentOdds = rec.action.includes("YES")
+    ? Math.max(0.05, 1 - rec.edge - 0.1)
     : Math.max(0.05, rec.edge + 0.1);
 
   const ActionIcon = getActionIcon();
@@ -83,7 +83,14 @@ function RecommendationCard({ rec }: { rec: AgentRecommendation }) {
 
         <div>
           <p className="font-medium text-sm truncate">{rec.market}</p>
-          <p className="text-xs text-muted-foreground">{rec.ticker}</p>
+          <a
+            href={`https://kalshi.com/markets/${rec.ticker}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-primary hover:underline font-mono"
+          >
+            {rec.ticker} ↗
+          </a>
         </div>
 
         <div className="flex items-center gap-3">
@@ -103,7 +110,9 @@ function RecommendationCard({ rec }: { rec: AgentRecommendation }) {
             </span>
           </div>
           <div className="bg-muted/50 rounded p-2">
-            <span className="text-muted-foreground block mb-1">Current odds:</span>
+            <span className="text-muted-foreground block mb-1">
+              Current odds:
+            </span>
             <span className="font-mono font-semibold text-sm">
               {formatPercent(currentOdds)}
             </span>
@@ -174,4 +183,3 @@ export function AgentFeed() {
     </div>
   );
 }
-

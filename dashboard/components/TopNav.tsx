@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Moon, Sun, TrendingUp, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -11,10 +12,12 @@ import {
   clearUserPreferences,
   markSkipOnboardingRedirect,
 } from "@/lib/useUserPreferences";
+import { useUIStore } from "@/store/ui";
 
 const routes = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/markets", label: "Markets" },
+  { href: "/saved", label: "Saved Picks" },
   { href: "/settings", label: "Settings" },
 ];
 
@@ -23,6 +26,7 @@ export function TopNav() {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const supabase = createClient();
+  const { isTradingDeckMode } = useUIStore();
 
   const handleSignOut = async () => {
     markSkipOnboardingRedirect();
@@ -32,12 +36,17 @@ export function TopNav() {
     router.refresh();
   };
 
+  // Hide nav when in trading deck mode
+  if (isTradingDeckMode) {
+    return null;
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center">
         <div className="mr-4 flex">
           <Link href="/dashboard" className="mr-6 flex items-center space-x-2">
-            <TrendingUp className="h-6 w-6" />
+            <Image src="/logo.png" alt="Magic Conch" width={32} height={32} className="h-8 w-8" />
             <span className="hidden font-bold sm:inline-block">Magic Conch</span>
           </Link>
           <nav className="flex items-center space-x-6 text-sm font-medium">

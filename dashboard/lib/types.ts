@@ -2,32 +2,6 @@ export type Domain = "Politics" | "Weather" | "Crypto" | "Sports";
 
 export type Side = "YES" | "NO";
 
-export type PositionStatus = "open" | "closed";
-
-export interface Position {
-  id: string;
-  ticker: string;
-  market: string;
-  domain: Domain;
-  side: Side;
-  entry: number;
-  mark: number;
-  size: number;
-  pnl: number;
-  edge: number;
-  status: PositionStatus;
-  openedAt: Date;
-  closedAt?: Date;
-  rationale?: string;
-  fills: Fill[];
-}
-
-export interface Fill {
-  timestamp: Date;
-  price: number;
-  quantity: number;
-}
-
 export interface Market {
   id: string;
   ticker: string;
@@ -45,8 +19,6 @@ export interface Market {
   volume24h: number;
   openInterest: number;
   closeTime: Date;
-  lastPrice?: number; // Last trade price (optional)
-  url: string; // Link to Kalshi market page
 }
 
 export interface PortfolioSnapshot {
@@ -84,61 +56,26 @@ export interface UISettings {
   maxPositionSize: number;
 }
 
-// Multi-Agent System Types
-
-export interface SourceComponent {
-  source: string;
-  probability: number;
-  confidence: number;
-  data?: any;
+export interface TradingPickSentiment {
+  label: "positive" | "negative" | "neutral";
+  score: number; // 0-100
+  confidence: "high" | "medium" | "low";
 }
 
-export interface QuantSignal {
-  pQuant: number;
-  confidence: number;
-  sources: SourceComponent[];
-  timestamp: Date;
-}
-
-export interface SentimentSignal {
-  pSent: number;
-  confidence: number;
-  nSamples: number;
-  sources: {
-    kalshi: number;
-    twitter: number;
-  };
-  rawData?: {
-    comments: Array<{ text: string; author: string; url: string; timestamp: Date }>;
-    tweets: Array<{ text: string; author: string; url: string; likes: number; timestamp: Date }>;
-  };
-  timestamp: Date;
-}
-
-export interface Decision {
-  action: "BUY_YES" | "BUY_NO" | "HOLD";
-  pMarket: number;
-  pQuant: number;
-  pSent: number;
-  pCombined: number;
-  edge: number;
-  confidence: number;
-  rationale: string;
-  sources: string[];
-  quantSignal?: QuantSignal;
-  sentimentSignal?: SentimentSignal;
-  timestamp: Date;
-}
-
-export interface MarketLite {
-  id: string;
+export interface TradingPick {
   ticker: string;
-  title: string;
-  series: string;
-  domain: Domain;
-  yesBid: number;
-  yesAsk: number;
-  lastPrice: number;
-  url: string; // Link to Kalshi market page
+  market_question?: string; // Optional human-readable market question
+  topic?: string; // Topic category (politics, weather, crypto, etc.)
+  decision: "BUY" | "SHORT" | "PASS";
+  technical_direction: "buy" | "short" | null;
+  market_p: number; // 0.0-1.0 probability
+  volatility_confidence: number; // 0.0-1.0
+  volume_confidence: number; // 0.0-1.0
+  momentum: "bullish" | "bearish" | "neutral";
+  final_confidence: number; // 0.0-1.0
+  reasoning: string;
+  sentiment: TradingPickSentiment;
+  key_themes: string[];
+  market_impact: string;
 }
 
