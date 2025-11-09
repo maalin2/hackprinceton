@@ -18,7 +18,7 @@ export function LandingPage() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      
+
       if (user) {
         router.replace("/dashboard");
       } else {
@@ -75,14 +75,15 @@ export function LandingPage() {
             <Bot className="w-4 h-4 text-primary" />
             <span className="text-sm font-medium">AI-Powered Trading</span>
           </div>
-          
+
           <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
             Magic Conch Trading Dashboard
           </h1>
-          
+
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Modern agentic AI trading system for Kalshi prediction markets. 
-            Let intelligent agents trade for you while you monitor performance in real-time.
+            Modern agentic AI trading system for Kalshi prediction markets. Let
+            intelligent agents trade for you while you monitor performance in
+            real-time.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
@@ -119,9 +120,12 @@ export function LandingPage() {
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 mx-auto">
                 <TrendingUp className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Real-Time Analytics</h3>
+              <h3 className="text-lg font-semibold mb-2">
+                Real-Time Analytics
+              </h3>
               <p className="text-sm text-muted-foreground">
-                Monitor your portfolio performance with live updates and detailed charts
+                Monitor your portfolio performance with live updates and
+                detailed charts
               </p>
             </Card>
 
@@ -131,7 +135,8 @@ export function LandingPage() {
               </div>
               <h3 className="text-lg font-semibold mb-2">AI Agents</h3>
               <p className="text-sm text-muted-foreground">
-                Autonomous trading agents that execute strategies based on market data
+                Autonomous trading agents that execute strategies based on
+                market data
               </p>
             </Card>
 
@@ -141,7 +146,8 @@ export function LandingPage() {
               </div>
               <h3 className="text-lg font-semibold mb-2">Secure & Private</h3>
               <p className="text-sm text-muted-foreground">
-                Your data is encrypted and secure with Google OAuth authentication
+                Your data is encrypted and secure with Google OAuth
+                authentication
               </p>
             </Card>
           </div>

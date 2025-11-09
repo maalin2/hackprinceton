@@ -65,7 +65,9 @@ export default function MarketsPage() {
     return (
       <div className="container py-6">
         <div className="flex items-center justify-center h-96">
-          <p className="text-muted-foreground">Loading personalized markets...</p>
+          <p className="text-muted-foreground">
+            Loading personalized markets...
+          </p>
         </div>
       </div>
     );

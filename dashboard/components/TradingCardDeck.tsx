@@ -32,52 +32,77 @@ export function TradingCardDeck() {
       console.log("   Data: Statistical + Grok AI Sentiment");
       console.log("   NO MOCK DATA - All events are real from Kalshi!\n");
     }
-    return recommendations.map((rec) => ({
-      ticker: rec.market.ticker,
-      market_question: rec.market.title,
-      topic: rec.market.domain.toLowerCase(),
-      decision:
-        rec.decision.action === "BUY_YES" || rec.decision.action === "BUY_NO"
-          ? "BUY"
-          : "PASS",
-      technical_direction:
-        rec.decision.action === "BUY_YES"
-          ? "buy"
-          : rec.decision.action === "BUY_NO"
-          ? "short"
-          : null,
-      market_p: rec.decision.pMarket,
-      volatility_confidence: rec.decision.confidence,
-      volume_confidence: rec.decision.confidence,
-      momentum:
-        rec.decision.edge > 0
-          ? "bullish"
-          : rec.decision.edge < 0
-          ? "bearish"
-          : "neutral",
-      final_confidence: rec.decision.confidence,
-      reasoning: rec.decision.rationale,
-      sentiment: {
-        label:
-          rec.decision.pSent > 0.6
-            ? "positive"
-            : rec.decision.pSent < 0.4
-            ? "negative"
+    return recommendations.map((rec) => {
+      // Determine decision type
+      let decision: "BUY" | "SHORT" | "PASS";
+      if (rec.decision.action === "BUY_YES") {
+        decision = "BUY";
+      } else if (rec.decision.action === "BUY_NO") {
+        decision = "SHORT";
+      } else {
+        decision = "PASS";
+      }
+      
+      // Get Grok sentiment if available
+      const grokSentiment = rec.decision.sentimentSignal;
+      const hasGrokData = grokSentiment !== undefined && grokSentiment !== null;
+      const grokScore = hasGrokData ? grokSentiment.pSent : rec.decision.pSent;
+      
+      // Determine if we have real Grok data (not just fallback)
+      // If pSent is exactly 0.5 and no sentimentSignal, it's likely a fallback
+      const isGrokFallback = !hasGrokData && rec.decision.pSent === 0.5;
+      
+      console.log(`   🔍 Grok check for ${rec.market.ticker}:`, {
+        hasGrokData,
+        sentimentSignal: rec.decision.sentimentSignal,
+        pSent: rec.decision.pSent,
+        isGrokFallback,
+      });
+      
+      return {
+        ticker: rec.market.ticker,
+        market_question: rec.market.title,
+        topic: rec.market.domain.toLowerCase(),
+        decision: decision,
+        technical_direction:
+          rec.decision.action === "BUY_YES"
+            ? "buy"
+            : rec.decision.action === "BUY_NO"
+            ? "short"
+            : null,
+        market_p: rec.decision.pMarket,
+        volatility_confidence: rec.decision.confidence,
+        volume_confidence: rec.decision.confidence,
+        momentum:
+          rec.decision.edge > 0
+            ? "bullish"
+            : rec.decision.edge < 0
+            ? "bearish"
             : "neutral",
-        score: Math.round(rec.decision.pSent * 100),
-        confidence:
-          rec.decision.confidence > 0.7
-            ? "high"
-            : rec.decision.confidence > 0.5
-            ? "medium"
-            : "low",
-      },
-      key_themes: rec.decision.sources || [],
-      market_impact:
-        Math.abs(rec.decision.edge) > 0.2
-          ? "High - Significant edge opportunity"
-          : "Medium - Moderate edge opportunity",
-    }));
+        final_confidence: rec.decision.confidence,
+        reasoning: rec.decision.rationale,
+        sentiment: hasGrokData && !isGrokFallback ? {
+          label:
+            grokScore > 0.6
+              ? "positive"
+              : grokScore < 0.4
+              ? "negative"
+              : "neutral",
+          score: Math.round(grokScore * 100),
+          confidence: grokSentiment.confidence > 0.7 ? "high" : 
+                     grokSentiment.confidence > 0.5 ? "medium" : "low",
+        } : {
+          label: "neutral" as const,
+          score: 0,
+          confidence: "low" as const,
+        },
+        key_themes: rec.decision.sources || [],
+        market_impact:
+          Math.abs(rec.decision.edge) > 0.2
+            ? "High - Significant edge opportunity"
+            : "Medium - Moderate edge opportunity",
+      };
+    });
   }, [recommendations]);
 
   const currentPick = picks[currentIndex] || null;
@@ -215,6 +240,14 @@ export function TradingCardDeck() {
     console.log(`\n📇 Displaying Card ${currentIndex + 1}/${totalPicks}`);
     console.log(`   Ticker: ${currentPick.ticker}`);
     console.log(`   Market: ${currentPick.market_question}`);
+    console.log(`   Action: ${rec.decision.action} → Display: ${currentPick.decision}`);
+    console.log(`   🤖 Grok Sentiment: ${currentPick.sentiment.label} (${currentPick.sentiment.score}%)`);
+    if (rec.decision.sentimentSignal) {
+      console.log(`      ✅ Grok data available: ${JSON.stringify(rec.decision.sentimentSignal, null, 2)}`);
+    } else {
+      console.log(`      ❌ No Grok sentimentSignal in decision object`);
+      console.log(`      pSent value: ${rec.decision.pSent}`);
+    }
     console.log(`   Source: Python Backend - REAL DATA`);
     console.log(
       `   🔗 Kalshi: https://kalshi.com/markets/${currentPick.ticker}`
