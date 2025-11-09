@@ -16,8 +16,10 @@ export function TradingCardDeck() {
   const {
     recommendations,
     loading,
+    processing,
     acceptRecommendation,
     dismissRecommendation,
+    getMoreRecommendations,
   } = useRecommendations();
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -163,7 +165,7 @@ export function TradingCardDeck() {
         <div className="text-center space-y-2">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
           <p className="text-muted-foreground">
-            Loading real picks from API...
+            {processing ? "Waiting for new recommendations..." : "Loading real picks from API..."}
           </p>
         </div>
       </div>
@@ -198,8 +200,8 @@ export function TradingCardDeck() {
           You've reviewed all {totalPicks} picks for today
         </p>
         <div className="flex gap-2 justify-center">
-          <Button onClick={reset} variant="outline">
-            Review Again
+          <Button onClick={() => { reset(); getMoreRecommendations(); }} variant="outline">
+            Get More Recommendations
           </Button>
           <Button onClick={() => (window.location.href = "/markets")}>
             Browse Markets
