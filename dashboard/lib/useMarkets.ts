@@ -251,8 +251,8 @@ export function useMarkets(options: UseMarketsOptions = {}) {
     
     fetchRealMarkets();
     
-    // Refresh every 60 seconds
-    const interval = setInterval(fetchRealMarkets, 60000);
+    // Refresh every 5 minutes
+    const interval = setInterval(fetchRealMarkets, 300000);
     return () => clearInterval(interval);
   }, [options.domain, options.minEdge, options.maxSpread]);
 
