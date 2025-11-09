@@ -44,23 +44,23 @@ export function TradingCardDeck() {
       } else {
         decision = "PASS";
       }
-      
+
       // Get Grok sentiment if available
       const grokSentiment = rec.decision.sentimentSignal;
       const hasGrokData = grokSentiment !== undefined && grokSentiment !== null;
       const grokScore = hasGrokData ? grokSentiment.pSent : rec.decision.pSent;
-      
+
       // Determine if we have real Grok data (not just fallback)
       // If pSent is exactly 0.5 and no sentimentSignal, it's likely a fallback
       const isGrokFallback = !hasGrokData && rec.decision.pSent === 0.5;
-      
+
       console.log(`   🔍 Grok check for ${rec.market.ticker}:`, {
         hasGrokData,
         sentimentSignal: rec.decision.sentimentSignal,
         pSent: rec.decision.pSent,
         isGrokFallback,
       });
-      
+
       return {
         ticker: rec.market.ticker,
         market_question: rec.market.title,
@@ -83,21 +83,28 @@ export function TradingCardDeck() {
             : "neutral",
         final_confidence: rec.decision.confidence,
         reasoning: rec.decision.rationale,
-        sentiment: hasGrokData && !isGrokFallback ? {
-          label:
-            grokScore > 0.6
-              ? "positive"
-              : grokScore < 0.4
-              ? "negative"
-              : "neutral",
-          score: Math.round(grokScore * 100),
-          confidence: grokSentiment.confidence > 0.7 ? "high" : 
-                     grokSentiment.confidence > 0.5 ? "medium" : "low",
-        } : {
-          label: "neutral" as const,
-          score: 0,
-          confidence: "low" as const,
-        },
+        sentiment:
+          hasGrokData && !isGrokFallback
+            ? {
+                label:
+                  grokScore > 0.6
+                    ? "positive"
+                    : grokScore < 0.4
+                    ? "negative"
+                    : "neutral",
+                score: Math.round(grokScore * 100),
+                confidence:
+                  grokSentiment.confidence > 0.7
+                    ? "high"
+                    : grokSentiment.confidence > 0.5
+                    ? "medium"
+                    : "low",
+              }
+            : {
+                label: "neutral" as const,
+                score: 0,
+                confidence: "low" as const,
+              },
         key_themes: rec.decision.sources || [],
         market_impact:
           Math.abs(rec.decision.edge) > 0.2
@@ -190,7 +197,9 @@ export function TradingCardDeck() {
         <div className="text-center space-y-2">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
           <p className="text-muted-foreground">
-            {processing ? "Waiting for new recommendations..." : "Loading real picks from API..."}
+            {processing
+              ? "Waiting for new recommendations..."
+              : "Loading real picks from API..."}
           </p>
         </div>
       </div>
@@ -225,7 +234,13 @@ export function TradingCardDeck() {
           You've reviewed all {totalPicks} picks for today
         </p>
         <div className="flex gap-2 justify-center">
-          <Button onClick={() => { reset(); getMoreRecommendations(); }} variant="outline">
+          <Button
+            onClick={() => {
+              reset();
+              getMoreRecommendations();
+            }}
+            variant="outline"
+          >
             Get More Recommendations
           </Button>
           <Button onClick={() => (window.location.href = "/markets")}>
@@ -242,10 +257,20 @@ export function TradingCardDeck() {
     console.log(`\n📇 Displaying Card ${currentIndex + 1}/${totalPicks}`);
     console.log(`   Ticker: ${currentPick.ticker}`);
     console.log(`   Market: ${currentPick.market_question}`);
-    console.log(`   Action: ${rec.decision.action} → Display: ${currentPick.decision}`);
-    console.log(`   🤖 Grok Sentiment: ${currentPick.sentiment.label} (${currentPick.sentiment.score}%)`);
+    console.log(
+      `   Action: ${rec.decision.action} → Display: ${currentPick.decision}`
+    );
+    console.log(
+      `   🤖 Grok Sentiment: ${currentPick.sentiment.label} (${currentPick.sentiment.score}%)`
+    );
     if (rec.decision.sentimentSignal) {
-      console.log(`      ✅ Grok data available: ${JSON.stringify(rec.decision.sentimentSignal, null, 2)}`);
+      console.log(
+        `      ✅ Grok data available: ${JSON.stringify(
+          rec.decision.sentimentSignal,
+          null,
+          2
+        )}`
+      );
     } else {
       console.log(`      ❌ No Grok sentimentSignal in decision object`);
       console.log(`      pSent value: ${rec.decision.pSent}`);

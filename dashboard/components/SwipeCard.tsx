@@ -7,7 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TradingPick } from "@/lib/types";
 import { formatPercent } from "@/lib/utils";
-import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown, X, Bookmark } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  ArrowDown,
+  X,
+  Bookmark,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PREFERENCE_TOPICS } from "@/lib/preferenceTopics";
 
@@ -22,17 +29,31 @@ interface SwipeCardProps {
 const SWIPE_THRESHOLD = 100;
 const ROTATION_MULTIPLIER = 0.1;
 
-export function SwipeCard({ pick, onSwipe, index, total, tradeModalOpen = false }: SwipeCardProps) {
+export function SwipeCard({
+  pick,
+  onSwipe,
+  index,
+  total,
+  tradeModalOpen = false,
+}: SwipeCardProps) {
   const [isExiting, setIsExiting] = useState(false);
   const [wasModalOpen, setWasModalOpen] = useState(false);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const rotate = useTransform(x, [-300, 300], [-30, 30]);
-  const opacity = useTransform(x, [-300, -SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD, 300], [0, 1, 1, 1, 0]);
+  const opacity = useTransform(
+    x,
+    [-300, -SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD, 300],
+    [0, 1, 1, 1, 0]
+  );
 
-  const getConfidenceLabel = (confidence: number): { label: string; color: string } => {
-    if (confidence >= 0.7) return { label: "High", color: "text-green-600 dark:text-green-400" };
-    if (confidence >= 0.5) return { label: "Medium", color: "text-yellow-600 dark:text-yellow-400" };
+  const getConfidenceLabel = (
+    confidence: number
+  ): { label: string; color: string } => {
+    if (confidence >= 0.7)
+      return { label: "High", color: "text-green-600 dark:text-green-400" };
+    if (confidence >= 0.5)
+      return { label: "Medium", color: "text-yellow-600 dark:text-yellow-400" };
     return { label: "Low", color: "text-red-600 dark:text-red-400" };
   };
 
@@ -40,12 +61,15 @@ export function SwipeCard({ pick, onSwipe, index, total, tradeModalOpen = false 
 
   const getTopicInfo = () => {
     if (!pick.topic) return null;
-    return PREFERENCE_TOPICS.find(t => t.id === pick.topic);
+    return PREFERENCE_TOPICS.find((t) => t.id === pick.topic);
   };
 
   const topicInfo = getTopicInfo();
 
-  const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+  const handleDragEnd = (
+    _: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
     const swipeDistance = Math.abs(info.offset.x);
     const verticalDistance = Math.abs(info.offset.y);
 
@@ -120,7 +144,9 @@ export function SwipeCard({ pick, onSwipe, index, total, tradeModalOpen = false 
 
     const handleKeyDown = (event: KeyboardEvent) => {
       // Only handle arrow keys
-      if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
+      if (
+        !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)
+      ) {
         return;
       }
 
@@ -170,7 +196,9 @@ export function SwipeCard({ pick, onSwipe, index, total, tradeModalOpen = false 
       dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
       dragElastic={0.2}
       onDragEnd={handleDragEnd}
-      animate={isExiting ? { scale: 0.8, opacity: 0 } : { scale: 1, opacity: 1 }}
+      animate={
+        isExiting ? { scale: 0.8, opacity: 0 } : { scale: 1, opacity: 1 }
+      }
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
       <Card className="p-6 pt-5 space-y-5 cursor-grab active:cursor-grabbing touch-none min-h-[480px]">
@@ -210,7 +238,12 @@ export function SwipeCard({ pick, onSwipe, index, total, tradeModalOpen = false 
           </div>
           <div className="bg-muted/50 rounded-lg p-4">
             <p className="text-sm text-muted-foreground mb-2">AI confidence</p>
-            <p className={cn("text-2xl font-mono font-bold", confidenceInfo.color)}>
+            <p
+              className={cn(
+                "text-2xl font-mono font-bold",
+                confidenceInfo.color
+              )}
+            >
               {confidenceInfo.label} ({formatPercent(pick.final_confidence)})
             </p>
           </div>
@@ -219,27 +252,49 @@ export function SwipeCard({ pick, onSwipe, index, total, tradeModalOpen = false 
         {/* Decision Badge */}
         <div className="flex items-center justify-center">
           <Badge
-            variant={pick.decision === "BUY" ? "default" : pick.decision === "SHORT" ? "destructive" : "outline"}
+            variant={
+              pick.decision === "BUY"
+                ? "default"
+                : pick.decision === "SHORT"
+                ? "destructive"
+                : "outline"
+            }
             className="text-sm px-4 py-1"
           >
-            {pick.decision === "BUY" && pick.technical_direction === "buy" && "📈 Recommended: BUY YES"}
-            {pick.decision === "SHORT" && pick.technical_direction === "short" && "📉 Recommended: BUY NO"}
-            {pick.decision === "BUY" && !pick.technical_direction && "📈 Recommended: BUY"}
-            {pick.decision === "SHORT" && !pick.technical_direction && "📉 Recommended: SHORT"}
+            {pick.decision === "BUY" &&
+              pick.technical_direction === "buy" &&
+              "📈 Recommended: BUY YES"}
+            {pick.decision === "SHORT" &&
+              pick.technical_direction === "short" &&
+              "📉 Recommended: BUY NO"}
+            {pick.decision === "BUY" &&
+              !pick.technical_direction &&
+              "📈 Recommended: BUY"}
+            {pick.decision === "SHORT" &&
+              !pick.technical_direction &&
+              "📉 Recommended: SHORT"}
             {pick.decision === "PASS" && "⏸️ Recommendation: PASS"}
           </Badge>
         </div>
-        
+
         {/* Grok Sentiment Display */}
         {pick.sentiment && (
           <div className="bg-muted/50 rounded-lg p-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">🤖 Grok Sentiment:</span>
+              <span className="text-sm text-muted-foreground">
+                🤖 Grok Sentiment:
+              </span>
               <div className="flex items-center gap-2">
-                {pick.sentiment.label !== "none" ? (
+                {pick.sentiment.score > 0 ? (
                   <>
-                    <Badge 
-                      variant={pick.sentiment.label === "positive" ? "default" : pick.sentiment.label === "negative" ? "destructive" : "outline"}
+                    <Badge
+                      variant={
+                        pick.sentiment.label === "positive"
+                          ? "default"
+                          : pick.sentiment.label === "negative"
+                          ? "destructive"
+                          : "outline"
+                      }
                       className="text-xs"
                     >
                       {pick.sentiment.label} ({pick.sentiment.score}%)
@@ -249,8 +304,11 @@ export function SwipeCard({ pick, onSwipe, index, total, tradeModalOpen = false 
                     </Badge>
                   </>
                 ) : (
-                  <Badge variant="outline" className="text-xs text-muted-foreground">
-                    Not available
+                  <Badge
+                    variant="outline"
+                    className="text-xs text-muted-foreground"
+                  >
+                    Not available (Grok analysis failed or not run)
                   </Badge>
                 )}
               </div>
@@ -291,4 +349,3 @@ export function SwipeCard({ pick, onSwipe, index, total, tradeModalOpen = false 
     </motion.div>
   );
 }
-
