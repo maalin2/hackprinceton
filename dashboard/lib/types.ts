@@ -1,4 +1,4 @@
-export type Domain = "Politics" | "Weather" | "Crypto" | "Sports";
+export type Domain = "Politics" | "Weather" | "Crypto" | "Sports" | "Economics" | "Technology" | "Entertainment";
 
 export type Side = "YES" | "NO";
 

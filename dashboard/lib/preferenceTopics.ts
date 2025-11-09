@@ -11,8 +11,7 @@ export const PREFERENCE_TOPICS: PreferenceTopic[] = [
 	{ id: "weather", name: "Weather", emoji: "🌤️" },
 	{ id: "crypto", name: "Crypto", emoji: "₿" },
 	{ id: "sports", name: "Sports", emoji: "⚽" },
-	{ id: "finance", name: "Finance", emoji: "💰" },
+	{ id: "finance", name: "Economics", emoji: "💰" },
 	{ id: "technology", name: "Technology", emoji: "💻" },
 	{ id: "entertainment", name: "Entertainment", emoji: "🎬" },
-	{ id: "economics", name: "Economics", emoji: "📈" },
 ];

@@ -4,12 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { useMarkets } from "@/lib/useMarkets";
 import { MarketCard } from "@/components/MarketCard";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Domain } from "@/lib/types";
 import { useUIStore } from "@/store/ui";
-import { Filter, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import {
@@ -23,21 +20,19 @@ const domains: (Domain | "all")[] = [
   "Weather",
   "Crypto",
   "Sports",
+  "Economics",
+  "Technology",
+  "Entertainment",
 ];
 
 export default function MarketsPage() {
   const { selectedDomain, setSelectedDomain } = useUIStore();
-  const [minEdge, setMinEdge] = useState<number>(0);
-  const [maxSpread, setMaxSpread] = useState<number>(20);
-  const [showFilters, setShowFilters] = useState(false);
   const router = useRouter();
   const { preferences, loading: prefsLoading } = useUserPreferences();
   const skipRedirectRef = useRef(false);
 
   const { markets, loading } = useMarkets({
     domain: selectedDomain === "all" ? undefined : selectedDomain,
-    minEdge,
-    maxSpread,
   });
 
   useEffect(() => {
@@ -82,18 +77,7 @@ export default function MarketsPage() {
         </p>
       </div>
 
-      {preferences.topics.length > 0 && (
-        <div className="mb-6 flex flex-wrap items-center gap-2">
-          <span className="text-sm text-muted-foreground">Your interests:</span>
-          {preferences.topics.map((topic) => (
-            <Badge key={topic} variant="secondary">
-              {topic.charAt(0).toUpperCase() + topic.slice(1)}
-            </Badge>
-          ))}
-        </div>
-      )}
-
-      {/* Domain Filters */}
+      {/* Category Buttons */}
       <div className="flex flex-wrap gap-2 mb-6">
         {domains.map((domain) => (
           <Button
@@ -105,65 +89,7 @@ export default function MarketsPage() {
             {domain === "all" ? "All Markets" : domain}
           </Button>
         ))}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowFilters(!showFilters)}
-        >
-          <Filter className="h-4 w-4 mr-2" />
-          Filters
-        </Button>
       </div>
-
-      {/* Advanced Filters */}
-      {showFilters && (
-        <div className="mb-6 p-4 border rounded-lg bg-card space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="min-edge">Minimum Edge (%)</Label>
-              <Input
-                id="min-edge"
-                type="number"
-                min="0"
-                max="100"
-                step="1"
-                value={minEdge * 100}
-                onChange={(e) => setMinEdge(Number(e.target.value) / 100)}
-                className="font-mono"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="max-spread">Maximum Spread (¢)</Label>
-              <Input
-                id="max-spread"
-                type="number"
-                min="0"
-                max="100"
-                step="1"
-                value={maxSpread}
-                onChange={(e) => setMaxSpread(Number(e.target.value))}
-                className="font-mono"
-              />
-            </div>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">
-              {markets.length} market{markets.length !== 1 ? "s" : ""} found
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setMinEdge(0);
-                setMaxSpread(20);
-              }}
-            >
-              <X className="h-4 w-4 mr-2" />
-              Clear Filters
-            </Button>
-          </div>
-        </div>
-      )}
 
       {/* Markets Grid */}
       {loading ? (
@@ -175,17 +101,15 @@ export default function MarketsPage() {
       ) : markets.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground">
-            No markets found matching your filters.
+            No markets found in this category.
           </p>
           <Button
             variant="link"
             onClick={() => {
-              setMinEdge(0);
-              setMaxSpread(20);
               setSelectedDomain("all");
             }}
           >
-            Clear all filters
+            View all markets
           </Button>
         </div>
       ) : (
