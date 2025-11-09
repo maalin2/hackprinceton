@@ -34,7 +34,7 @@ export function TradingCardDeck() {
       console.log("   Data: Statistical + Grok AI Sentiment");
       console.log("   NO MOCK DATA - All events are real from Kalshi!\n");
     }
-    return recommendations.map((rec) => {
+    const allPicks = recommendations.map((rec) => {
       // Determine decision type
       let decision: "BUY" | "SHORT" | "PASS";
       if (rec.decision.action === "BUY_YES") {
@@ -66,39 +66,35 @@ export function TradingCardDeck() {
         market_question: rec.market.title,
         topic: rec.market.domain.toLowerCase(),
         decision: decision,
-        technical_direction:
-          rec.decision.action === "BUY_YES"
-            ? "buy"
-            : rec.decision.action === "BUY_NO"
-            ? "short"
-            : null,
+        technical_direction: (rec.decision.action === "BUY_YES"
+          ? "buy"
+          : rec.decision.action === "BUY_NO"
+          ? "short"
+          : null) as "buy" | "short" | null,
         market_p: rec.decision.pMarket,
         volatility_confidence: rec.decision.confidence,
         volume_confidence: rec.decision.confidence,
-        momentum:
-          rec.decision.edge > 0
-            ? "bullish"
-            : rec.decision.edge < 0
-            ? "bearish"
-            : "neutral",
+        momentum: (rec.decision.edge > 0
+          ? "bullish"
+          : rec.decision.edge < 0
+          ? "bearish"
+          : "neutral") as "bullish" | "bearish" | "neutral",
         final_confidence: rec.decision.confidence,
         reasoning: rec.decision.rationale,
         sentiment:
           hasGrokData && !isGrokFallback
             ? {
-                label:
-                  grokScore > 0.6
-                    ? "positive"
-                    : grokScore < 0.4
-                    ? "negative"
-                    : "neutral",
+                label: (grokScore > 0.6
+                  ? "positive"
+                  : grokScore < 0.4
+                  ? "negative"
+                  : "neutral") as "positive" | "negative" | "neutral",
                 score: Math.round(grokScore * 100),
-                confidence:
-                  grokSentiment.confidence > 0.7
-                    ? "high"
-                    : grokSentiment.confidence > 0.5
-                    ? "medium"
-                    : "low",
+                confidence: (grokSentiment.confidence > 0.7
+                  ? "high"
+                  : grokSentiment.confidence > 0.5
+                  ? "medium"
+                  : "low") as "high" | "medium" | "low",
               }
             : {
                 label: "neutral" as const,
@@ -112,6 +108,21 @@ export function TradingCardDeck() {
             : "Medium - Moderate edge opportunity",
       };
     });
+
+    // Sort by final_confidence (descending) and take top 5
+    const topPicks = allPicks
+      .sort((a, b) => b.final_confidence - a.final_confidence)
+      .slice(0, 5);
+
+    if (topPicks.length > 0) {
+      console.log(`\n✨ Filtered to top ${topPicks.length} highest confidence picks`);
+      console.log("   Confidence range:", {
+        highest: topPicks[0]?.final_confidence.toFixed(2),
+        lowest: topPicks[topPicks.length - 1]?.final_confidence.toFixed(2),
+      });
+    }
+
+    return topPicks;
   }, [recommendations]);
 
   const currentPick = picks[currentIndex] || null;

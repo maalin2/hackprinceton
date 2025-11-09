@@ -259,7 +259,10 @@ export function SwipeCard({
                 ? "destructive"
                 : "outline"
             }
-            className="text-sm px-4 py-1"
+            className={cn(
+              "text-sm px-4 py-1",
+              pick.decision === "BUY" && "bg-green-600 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-600"
+            )}
           >
             {pick.decision === "BUY" &&
               pick.technical_direction === "buy" &&
