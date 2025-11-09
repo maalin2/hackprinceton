@@ -277,45 +277,6 @@ export function SwipeCard({
           </Badge>
         </div>
 
-        {/* Grok Sentiment Display */}
-        {pick.sentiment && (
-          <div className="bg-muted/50 rounded-lg p-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                🤖 Grok Sentiment:
-              </span>
-              <div className="flex items-center gap-2">
-                {pick.sentiment.score > 0 ? (
-                  <>
-                    <Badge
-                      variant={
-                        pick.sentiment.label === "positive"
-                          ? "default"
-                          : pick.sentiment.label === "negative"
-                          ? "destructive"
-                          : "outline"
-                      }
-                      className="text-xs"
-                    >
-                      {pick.sentiment.label} ({pick.sentiment.score}%)
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      {pick.sentiment.confidence} confidence
-                    </Badge>
-                  </>
-                ) : (
-                  <Badge
-                    variant="outline"
-                    className="text-xs text-muted-foreground"
-                  >
-                    Not available (Grok analysis failed or not run)
-                  </Badge>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Reasoning */}
         <div className="space-y-3">
           <h4 className="text-base font-semibold flex items-center gap-2">
