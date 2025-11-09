@@ -46,8 +46,16 @@ export function TopNav() {
       <div className="container flex h-14 items-center">
         <div className="mr-4 flex">
           <Link href="/dashboard" className="mr-6 flex items-center space-x-2">
-            <Image src="/logo.png" alt="Magic Conch" width={32} height={32} className="h-8 w-8" />
-            <span className="hidden font-bold sm:inline-block">Magic Conch</span>
+            <Image
+              src="/logo.png"
+              alt="Magic Conch"
+              width={32}
+              height={32}
+              className="h-8 w-8"
+            />
+            <span className="hidden font-bold sm:inline-block">
+              Magic Conch
+            </span>
           </Link>
           <nav className="flex items-center space-x-6 text-sm font-medium">
             {routes.map((route) => (

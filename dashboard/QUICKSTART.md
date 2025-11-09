@@ -204,6 +204,7 @@ Optimized production build with:
 - Font optimization
 
 **Important for production:**
+
 - Update Google OAuth redirect URIs with your production domain
 - Use HTTPS in production
 - Set `NEXTAUTH_URL` to your production URL
@@ -214,12 +215,14 @@ Optimized production build with:
 ### "Invalid redirect_uri" error
 
 Make sure your Google OAuth redirect URI exactly matches:
+
 - Development: `http://localhost:3000/api/auth/callback/google`
 - Production: `https://yourdomain.com/api/auth/callback/google`
 
 ### "Invalid client" error
 
 Check that:
+
 - `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are correct
 - No extra spaces in `.env.local`
 - Environment variables are loaded (restart dev server)

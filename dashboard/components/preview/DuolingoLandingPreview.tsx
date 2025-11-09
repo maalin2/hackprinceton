@@ -2,7 +2,7 @@
 
 /**
  * DUOLINGO-INSPIRED LANDING PAGE PREVIEW
- * 
+ *
  * Features:
  * - Bright, welcoming hero with mascot illustration area
  * - Large, rounded buttons with 3D shadow effect
@@ -13,14 +13,14 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { 
-  TrendingUp, 
-  Zap, 
-  Shield, 
+import {
+  TrendingUp,
+  Zap,
+  Shield,
   Trophy,
   Star,
   Target,
-  Sparkles
+  Sparkles,
 } from "lucide-react";
 
 export function DuolingoLandingPreview() {
@@ -37,9 +37,11 @@ export function DuolingoLandingPreview() {
           {/* Fun badge */}
           <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 text-white mb-8 duo-badge">
             <Sparkles className="w-5 h-5" />
-            <span className="text-sm font-bold">AI-Powered Trading Made Fun!</span>
+            <span className="text-sm font-bold">
+              AI-Powered Trading Made Fun!
+            </span>
           </div>
-          
+
           <h1 className="text-6xl md:text-7xl font-extrabold mb-6 leading-tight">
             <span className="text-gray-800">Learn to trade</span>
             <br />
@@ -47,9 +49,11 @@ export function DuolingoLandingPreview() {
               while you earn! 🚀
             </span>
           </h1>
-          
+
           <p className="text-2xl text-gray-700 mb-12 max-w-2xl mx-auto leading-relaxed">
-            The <span className="font-bold text-[#58CC02]">fun, free</span> way to master prediction market trading with AI agents helping you every step! 
+            The <span className="font-bold text-[#58CC02]">fun, free</span> way
+            to master prediction market trading with AI agents helping you every
+            step!
           </p>
 
           {/* Main CTA */}
@@ -57,7 +61,7 @@ export function DuolingoLandingPreview() {
             <Button
               size="lg"
               className="duo-button text-xl px-12 py-8 rounded-2xl bg-[#58CC02] hover:bg-[#58CC02] text-white font-bold"
-              style={{ boxShadow: '0 6px 0 #46A302' }}
+              style={{ boxShadow: "0 6px 0 #46A302" }}
             >
               <svg className="w-6 h-6 mr-3" viewBox="0 0 24 24">
                 <path
@@ -82,7 +86,8 @@ export function DuolingoLandingPreview() {
           </div>
 
           <p className="text-sm text-gray-600 mb-16">
-            ✨ <span className="font-semibold">100% free</span> • No credit card needed • Start earning today
+            ✨ <span className="font-semibold">100% free</span> • No credit card
+            needed • Start earning today
           </p>
 
           {/* Stats bar */}
@@ -108,9 +113,12 @@ export function DuolingoLandingPreview() {
                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-green-400 to-[#58CC02] flex items-center justify-center mb-6 mx-auto">
                   <TrendingUp className="w-10 h-10 text-white" />
                 </div>
-                <h3 className="text-xl font-bold mb-3 text-gray-800">Real-Time Insights</h3>
+                <h3 className="text-xl font-bold mb-3 text-gray-800">
+                  Real-Time Insights
+                </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  Watch your portfolio grow with beautiful charts and instant updates! 📊
+                  Watch your portfolio grow with beautiful charts and instant
+                  updates! 📊
                 </p>
               </div>
             </div>
@@ -120,9 +128,12 @@ export function DuolingoLandingPreview() {
                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-400 to-[#1CB0F6] flex items-center justify-center mb-6 mx-auto">
                   <Zap className="w-10 h-10 text-white" />
                 </div>
-                <h3 className="text-xl font-bold mb-3 text-gray-800">AI Super Powers</h3>
+                <h3 className="text-xl font-bold mb-3 text-gray-800">
+                  AI Super Powers
+                </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  Smart AI agents work 24/7 to find you the best trading opportunities! 🤖
+                  Smart AI agents work 24/7 to find you the best trading
+                  opportunities! 🤖
                 </p>
               </div>
             </div>
@@ -132,9 +143,12 @@ export function DuolingoLandingPreview() {
                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-400 to-[#FF9600] flex items-center justify-center mb-6 mx-auto">
                   <Trophy className="w-10 h-10 text-white" />
                 </div>
-                <h3 className="text-xl font-bold mb-3 text-gray-800">Earn Rewards</h3>
+                <h3 className="text-xl font-bold mb-3 text-gray-800">
+                  Earn Rewards
+                </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  Build streaks, unlock achievements, and level up your trading game! 🏆
+                  Build streaks, unlock achievements, and level up your trading
+                  game! 🏆
                 </p>
               </div>
             </div>
@@ -150,37 +164,47 @@ export function DuolingoLandingPreview() {
                 </div>
                 <div>
                   <h4 className="font-bold text-lg mb-2">Bite-sized trades</h4>
-                  <p className="text-white/90">Quick, fun trades that fit into your day. Just 5 minutes!</p>
+                  <p className="text-white/90">
+                    Quick, fun trades that fit into your day. Just 5 minutes!
+                  </p>
                 </div>
               </div>
-              
+
               <div className="flex gap-4">
                 <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
                   <Star className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-lg mb-2">Personalized for you</h4>
-                  <p className="text-white/90">AI learns your style and suggests perfect picks!</p>
+                  <h4 className="font-bold text-lg mb-2">
+                    Personalized for you
+                  </h4>
+                  <p className="text-white/90">
+                    AI learns your style and suggests perfect picks!
+                  </p>
                 </div>
               </div>
-              
+
               <div className="flex gap-4">
                 <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
                   <Trophy className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h4 className="font-bold text-lg mb-2">Stay motivated</h4>
-                  <p className="text-white/90">Streaks, XP, and achievements keep you on track!</p>
+                  <p className="text-white/90">
+                    Streaks, XP, and achievements keep you on track!
+                  </p>
                 </div>
               </div>
-              
+
               <div className="flex gap-4">
                 <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
                   <Shield className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h4 className="font-bold text-lg mb-2">Safe & secure</h4>
-                  <p className="text-white/90">Your data is protected with bank-level security!</p>
+                  <p className="text-white/90">
+                    Your data is protected with bank-level security!
+                  </p>
                 </div>
               </div>
             </div>
@@ -197,7 +221,7 @@ export function DuolingoLandingPreview() {
             <Button
               size="lg"
               className="duo-button text-xl px-12 py-8 rounded-2xl bg-[#58CC02] hover:bg-[#58CC02] text-white font-bold"
-              style={{ boxShadow: '0 6px 0 #46A302' }}
+              style={{ boxShadow: "0 6px 0 #46A302" }}
             >
               Start Trading Now - It's Free! 🚀
             </Button>

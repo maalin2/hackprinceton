@@ -222,11 +222,41 @@ export function SwipeCard({ pick, onSwipe, index, total, tradeModalOpen = false 
             variant={pick.decision === "BUY" ? "default" : pick.decision === "SHORT" ? "destructive" : "outline"}
             className="text-sm px-4 py-1"
           >
-            {pick.decision === "BUY" && "📈 Recommended: BUY"}
-            {pick.decision === "SHORT" && "📉 Recommended: SHORT"}
+            {pick.decision === "BUY" && pick.technical_direction === "buy" && "📈 Recommended: BUY YES"}
+            {pick.decision === "SHORT" && pick.technical_direction === "short" && "📉 Recommended: BUY NO"}
+            {pick.decision === "BUY" && !pick.technical_direction && "📈 Recommended: BUY"}
+            {pick.decision === "SHORT" && !pick.technical_direction && "📉 Recommended: SHORT"}
             {pick.decision === "PASS" && "⏸️ Recommendation: PASS"}
           </Badge>
         </div>
+        
+        {/* Grok Sentiment Display */}
+        {pick.sentiment && (
+          <div className="bg-muted/50 rounded-lg p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">🤖 Grok Sentiment:</span>
+              <div className="flex items-center gap-2">
+                {pick.sentiment.label !== "none" ? (
+                  <>
+                    <Badge 
+                      variant={pick.sentiment.label === "positive" ? "default" : pick.sentiment.label === "negative" ? "destructive" : "outline"}
+                      className="text-xs"
+                    >
+                      {pick.sentiment.label} ({pick.sentiment.score}%)
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">
+                      {pick.sentiment.confidence} confidence
+                    </Badge>
+                  </>
+                ) : (
+                  <Badge variant="outline" className="text-xs text-muted-foreground">
+                    Not available
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Reasoning */}
         <div className="space-y-3">
