@@ -61,26 +61,10 @@ export function MarketCard({ market }: MarketCardProps) {
               {formatPercent(market.impliedProb)}
             </span>
           </div>
-          <div className="flex justify-between text-xs mb-2">
-            <span className="text-muted-foreground">Combined</span>
-            <span className="font-mono font-semibold">
-              {formatPercent(market.combinedProb)}
-            </span>
-          </div>
-          <div className="h-2 rounded-full bg-muted overflow-hidden">
-            <div
-              className="h-full bg-primary transition-all"
-              style={{ width: `${market.combinedProb * 100}%` }}
-            />
-          </div>
         </div>
 
-        {/* Edge & Stats */}
-        <div className="flex items-center justify-between pt-2 border-t">
-          <div className="flex gap-2 text-xs text-muted-foreground">
-            <span>Spread: {market.spread}¢</span>
-            <span>Vol: {market.volume24h}</span>
-          </div>
+        {/* Edge */}
+        <div className="flex items-center justify-end pt-2 border-t">
           <EdgeBadge edge={market.edge} />
         </div>
       </CardContent>

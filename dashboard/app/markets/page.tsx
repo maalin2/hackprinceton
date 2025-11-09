@@ -9,6 +9,15 @@ import { Domain } from "@/lib/types";
 import { useUIStore } from "@/store/ui";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
+import { Info } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   consumeSkipOnboardingRedirect,
   useUserPreferences,
@@ -71,7 +80,46 @@ export default function MarketsPage() {
   return (
     <div className="container py-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Markets</h1>
+        <div className="flex items-center gap-2 mb-2">
+          <h1 className="text-3xl font-bold">Markets</h1>
+          <Dialog>
+            <DialogTrigger asChild>
+              <button className="text-muted-foreground hover:text-foreground transition-colors">
+                <Info className="h-5 w-5" />
+                <span className="sr-only">Market card information</span>
+              </button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Understanding Market Cards</DialogTitle>
+                <DialogDescription asChild>
+                  <div className="space-y-4 pt-2">
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">Market Title & Ticker</h4>
+                      <p className="text-sm">The prediction market question and its unique identifier code.</p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">Category Badge</h4>
+                      <p className="text-sm">The market category (Politics, Weather, Crypto, Sports, Economics, Technology, or Entertainment).</p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">YES / NO Prices</h4>
+                      <p className="text-sm">Bid/Ask prices in cents (¢). Purple shows the bid (what you can sell for), red shows the ask (what you can buy for). For example, "45¢ / 47¢" means you can sell at 45¢ or buy at 47¢.</p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">Market Probability</h4>
+                      <p className="text-sm">The implied probability based on current market prices. This represents what the market believes is the likelihood of the event occurring.</p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">Edge Badge</h4>
+                      <p className="text-sm">The trading edge or advantage, shown as a percentage. A higher edge indicates a potentially more profitable trading opportunity based on our analysis compared to market pricing.</p>
+                    </div>
+                  </div>
+                </DialogDescription>
+              </DialogHeader>
+            </DialogContent>
+          </Dialog>
+        </div>
         <p className="text-muted-foreground">
           Browse active prediction markets and find trading opportunities
         </p>

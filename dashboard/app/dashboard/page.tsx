@@ -90,7 +90,7 @@ export default function DashboardPage() {
         <div className="flex-1 space-y-6 min-w-0">
           <div>
             <h1 className="text-3xl font-bold mb-2">
-              Welcome back, {preferences.name}! 👋
+              Welcome back, {preferences.name}!
             </h1>
           </div>
 
