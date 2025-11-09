@@ -1,0 +1,11 @@
+# API Server Requirements
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.0.0
+
+# Already installed (from existing requirements)
+# requests
+# pandas
+# numpy
+# pytz
+

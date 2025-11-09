@@ -1,10 +1,6 @@
 import { useState, useEffect } from "react";
 import { Decision, MarketLite, Domain } from "./types";
-import { quantAgent } from "./agents/quant";
-import { sentimentAgent } from "./agents/sentiment";
-import { decisionEngine } from "./agents/decision";
 import { useUIStore } from "@/store/ui";
-import { useMarkets } from "./useMarkets";
 
 export interface RecommendationWithMarket {
   market: MarketLite;
@@ -13,116 +9,176 @@ export interface RecommendationWithMarket {
   status: "pending" | "accepted" | "snoozed" | "dismissed";
 }
 
+// Python API backend URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 // Helper function to generate Kalshi market URL
 function getKalshiMarketUrl(ticker: string): string {
   return `https://kalshi.com/markets/${ticker}`;
 }
 
 /**
- * Hook to manage multi-agent recommendations
+ * Hook to manage hybrid recommendations from Python backend
+ * (Statistical + Grok AI)
  */
 export function useRecommendations() {
   const [recommendations, setRecommendations] = useState<RecommendationWithMarket[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const { settings } = useUIStore();
-  const { markets, loading: marketsLoading } = useMarkets({ limit: 50 }); // Get real markets
 
   useEffect(() => {
-    // Update decision engine weights from settings
-    decisionEngine.setWeights({
-      quantWeight: settings.quantWeight,
-      sentimentWeight: settings.sentimentWeight,
-    });
-    decisionEngine.setEdgeThreshold(settings.minEdgeThreshold);
-  }, [settings]);
+    // Initial fetch
+    fetchRecommendations();
 
-  useEffect(() => {
-    // Wait for markets to load
-    if (marketsLoading) {
-      setLoading(true);
-      return;
-    }
-
-    // Initial analysis
-    analyzeMarkets();
-
-    // Re-analyze every 60 seconds
+    // Re-fetch every 60 seconds
     const interval = setInterval(() => {
-      analyzeMarkets();
+      fetchRecommendations();
     }, 60000);
 
     return () => clearInterval(interval);
-  }, [settings, markets, marketsLoading]);
+  }, []);
 
   /**
-   * Analyze markets and generate recommendations
+   * Fetch recommendations from Python backend (hybrid analysis)
    */
-  const analyzeMarkets = async () => {
-    if (markets.length === 0) {
-      setLoading(false);
-      return;
-    }
-
+  const fetchRecommendations = async () => {
     setProcessing(true);
     
     try {
-      // Convert Market to MarketLite for analysis
-      const marketsToAnalyze: MarketLite[] = markets.slice(0, 20).map((m) => {
-        // Ensure URL is always set (fallback to generated URL if missing)
-        const url = m.url || `https://kalshi.com/markets/${m.ticker}`;
+      const timestamp = new Date().toLocaleTimeString();
+      console.log(`\n${'='.repeat(80)}`);
+      console.log(`[${timestamp}] 🔄 Fetching recommendations from Python backend`);
+      console.log(`API URL: ${API_BASE_URL}/api/recommendations`);
+      console.log(`${'='.repeat(80)}`);
+      
+      const response = await fetch(`${API_BASE_URL}/api/recommendations`);
+      
+      if (!response.ok) {
+        throw new Error(`API failed: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      console.log(`\n📊 Response status: ${data.status}`);
+      
+      if (data.status === "analyzing") {
+        console.log("⏳ Backend is analyzing, keeping existing recommendations");
+        console.log("   (New results will appear when analysis completes)");
+        // Keep existing recommendations while analysis runs
+        setProcessing(true);
+        return;
+      }
+      
+      if (data.status === "empty") {
+        console.log("⚠️  No recommendations yet, waiting for first analysis");
+        console.log("   ⏱️  This usually takes 30-60 seconds on first run");
+        setRecommendations([]);
+        setLoading(false);
+        return;
+      }
+      
+      console.log(`\n✅ Received ${data.opportunities?.length || 0} opportunities from Python backend`);
+      
+      // Convert Python API format to dashboard format
+      const converted: RecommendationWithMarket[] = data.opportunities.map((opp: any) => {
+        // Determine domain from category
+        const domain: Domain = opp.category as Domain;
+        
+        // Convert Python recommendation to dashboard format
+        const market: MarketLite = {
+          id: opp.ticker,
+          ticker: opp.ticker,
+          title: opp.title,
+          series: opp.ticker.split('-')[0], // Extract series from ticker
+          domain,
+          yesBid: opp.market_prob * 100, // Convert to cents
+          yesAsk: opp.market_prob * 100,
+          lastPrice: opp.market_prob * 100,
+          url: opp.url,
+        };
+        
+        const decision: Decision = {
+          action: opp.action === "BUY_YES" ? "BUY_YES" : "BUY_NO",
+          pMarket: opp.market_prob,
+          pQuant: opp.quant_prob,
+          pSent: opp.grok_sentiment?.score ? opp.grok_sentiment.score / 100 : 0.5,
+          pCombined: opp.quant_prob, // Use quant as combined for now
+          edge: opp.quant_edge,
+          confidence: opp.combined_confidence,
+          rationale: opp.reasoning,
+          sources: opp.quant_sources,
+          quantSignal: {
+            pQuant: opp.quant_prob,
+            confidence: opp.confidence,
+            sources: opp.quant_sources.map((source: string) => ({
+              source,
+              probability: opp.quant_prob,
+              confidence: opp.confidence,
+            })),
+            timestamp: new Date(opp.timestamp),
+          },
+          sentimentSignal: opp.grok_sentiment ? {
+            pSent: opp.grok_sentiment.score / 100,
+            confidence: opp.grok_sentiment.confidence === 'high' ? 0.8 : 
+                       opp.grok_sentiment.confidence === 'medium' ? 0.6 : 0.4,
+            nSamples: 1, // Grok is single analysis
+            sources: {
+              kalshi: 0,
+              twitter: 1,
+            },
+            rawData: {
+              comments: [],
+              tweets: [{
+                text: `Grok analysis: ${opp.grok_sentiment.label} (${opp.grok_sentiment.score}%)`,
+                author: 'Grok AI',
+                url: opp.url,
+                likes: 0,
+                timestamp: new Date(opp.timestamp),
+              }],
+            },
+            timestamp: new Date(opp.timestamp),
+          } : undefined,
+          timestamp: new Date(opp.timestamp),
+        };
+        
         return {
-          id: m.id,
-          ticker: m.ticker,
-          title: m.title,
-          series: m.series,
-          domain: m.domain,
-          yesBid: m.yesBid,
-          yesAsk: m.yesAsk,
-          lastPrice: m.lastPrice || (m.yesBid + m.yesAsk) / 2,
-          url,
+          market,
+          decision,
+          id: `rec-${opp.ticker}-${Date.now()}`,
+          status: "pending" as const,
         };
       });
       
-      console.log(`[Recommendations] Analyzing ${marketsToAnalyze.length} markets with URLs:`, 
-        marketsToAnalyze.map(m => ({ ticker: m.ticker, url: m.url }))
-      );
-
-      // Analyze each market in parallel
-      const analyses = await Promise.all(
-        marketsToAnalyze.map(async (market) => {
-          try {
-            // Run agents in parallel
-            const [quantSignal, sentimentSignal] = await Promise.all([
-              quantAgent.analyze(market),
-              sentimentAgent.analyze(market),
-            ]);
-
-            // Make decision
-            const decision = decisionEngine.decide(market, quantSignal, sentimentSignal);
-
-            return {
-              market,
-              decision,
-              id: `rec-${market.id}-${Date.now()}`,
-              status: "pending" as const,
-            };
-          } catch (error) {
-            console.error(`Error analyzing market ${market.ticker}:`, error);
-            return null;
-          }
-        })
-      );
-
-      // Filter out failed analyses and only include actionable recommendations
-      const validRecommendations = analyses.filter(
-        (rec): rec is RecommendationWithMarket =>
-          rec !== null && rec.decision.action !== "HOLD"
-      );
-
-      setRecommendations(validRecommendations);
+      console.log(`\n🔄 Converting ${converted.length} recommendations to dashboard format...`);
+      
+      // Log each recommendation
+      converted.forEach((rec, i) => {
+        console.log(`\n📌 Recommendation #${i + 1}:`);
+        console.log(`   Ticker: ${rec.market.ticker}`);
+        console.log(`   Market: ${rec.market.title.substring(0, 60)}...`);
+        console.log(`   Action: ${rec.decision.action}`);
+        console.log(`   📊 Quant Edge: ${(rec.decision.edge * 100).toFixed(1)}%`);
+        console.log(`   🤖 Grok Sentiment: ${rec.decision.sentimentSignal ? 
+          `${(rec.decision.pSent * 100).toFixed(0)}%` : 'N/A'}`);
+        console.log(`   🎯 Combined Confidence: ${(rec.decision.confidence * 100).toFixed(1)}%`);
+        console.log(`   🔗 Kalshi: ${rec.market.url}`);
+      });
+      
+      console.log(`\n${'='.repeat(80)}`);
+      console.log(`✅ Successfully converted and set ${converted.length} recommendations`);
+      console.log(`📅 Last updated: ${data.lastUpdated || 'just now'}`);
+      console.log(`${'='.repeat(80)}\n`);
+      
+      setRecommendations(converted);
+      setLastUpdated(data.lastUpdated ? new Date(data.lastUpdated) : new Date());
+      
     } catch (error) {
-      console.error("Error analyzing markets:", error);
+      console.error(`\n❌ Error fetching from Python backend:`);
+      console.error(error);
+      console.error(`\n⚠️  Keeping existing recommendations\n`);
+      // Don't clear existing recommendations on error
     } finally {
       setLoading(false);
       setProcessing(false);
@@ -171,16 +227,17 @@ export function useRecommendations() {
   };
 
   /**
-   * Manually trigger re-analysis
+   * Manually trigger re-fetch
    */
   const refresh = () => {
-    analyzeMarkets();
+    fetchRecommendations();
   };
 
   return {
     recommendations: recommendations.filter((r) => r.status === "pending"),
     loading,
     processing,
+    lastUpdated,
     acceptRecommendation,
     snoozeRecommendation,
     dismissRecommendation,
