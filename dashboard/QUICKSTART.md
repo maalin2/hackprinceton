@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-Get the Magic Conch Trading Dashboard running in 3 minutes.
+Get the PropheSea Trading Dashboard running in 3 minutes.
 
 ## Prerequisites
 
@@ -288,4 +288,4 @@ For questions or issues:
 3. Inspect browser console for errors
 4. Check `.env.local` file is properly configured
 
-Enjoy building with the Magic Conch Trading Dashboard! 🚀
+Enjoy building with the PropheSea Trading Dashboard! 🚀

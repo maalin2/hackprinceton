@@ -13,7 +13,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Magic Conch Trading Dashboard",
+  title: "PropheSea Trading Dashboard",
   description: "Modern agentic AI trading system for Kalshi prediction markets",
 };
 

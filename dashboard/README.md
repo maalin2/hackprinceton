@@ -1,4 +1,4 @@
-# Magic Conch Trading Dashboard
+# PropheSea Trading Dashboard
 
 A modern, minimal trading dashboard for an agentic AI system built for Kalshi prediction markets.
 

@@ -85,7 +85,7 @@ export default function OnboardingPage() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <TrendingUp className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold">Welcome to Magic Conch</h1>
+            <h1 className="text-2xl font-bold">Welcome to PropheSea</h1>
           </div>
           <p className="text-muted-foreground">
             Let&apos;s personalize your trading experience
