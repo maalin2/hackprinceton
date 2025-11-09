@@ -92,7 +92,7 @@ export function TradingCardDeck() {
   if (!hasMorePicks) {
     return (
       <Card className="p-8 text-center">
-        <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-green-600" />
+        <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-purple-600" />
         <h3 className="text-lg font-semibold mb-2">All done! 🎉</h3>
         <p className="text-muted-foreground mb-4">
           You've reviewed all {totalPicks} picks for today

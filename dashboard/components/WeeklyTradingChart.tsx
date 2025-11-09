@@ -18,13 +18,13 @@ import { Activity } from "lucide-react";
 
 // Mock data for trading volume by day of the week
 const weeklyData = [
-  { day: "Mon", volume: 4200 },
-  { day: "Tue", volume: 5800 },
-  { day: "Wed", volume: 7200 },
-  { day: "Thu", volume: 6100 },
-  { day: "Fri", volume: 8400 },
-  { day: "Sat", volume: 3200 },
-  { day: "Sun", volume: 2800 },
+  { day: "Mon", volume: 285.50 },
+  { day: "Tue", volume: 412.30 },
+  { day: "Wed", volume: 198.75 },
+  { day: "Thu", volume: 367.90 },
+  { day: "Fri", volume: 456.20 },
+  { day: "Sat", volume: 234.60 },
+  { day: "Sun", volume: 342.15 }, // Matches today's profit
 ];
 
 export function WeeklyTradingChart() {
@@ -32,7 +32,7 @@ export function WeeklyTradingChart() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <div className="flex items-center gap-2">
-          <Activity className="h-5 w-5 text-green-600 dark:text-green-400" />
+          <Activity className="h-5 w-5 text-purple-600 dark:text-purple-400" />
           <CardTitle>Weekly Trading Volume</CardTitle>
         </div>
       </CardHeader>
@@ -41,8 +41,8 @@ export function WeeklyTradingChart() {
           <ComposedChart data={weeklyData}>
             <defs>
               <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="rgb(22, 163, 74)" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="rgb(22, 163, 74)" stopOpacity={0.1}/>
+                <stop offset="5%" stopColor="rgb(139, 92, 246)" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="rgb(139, 92, 246)" stopOpacity={0.1}/>
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" opacity={0.3} />
@@ -77,9 +77,9 @@ export function WeeklyTradingChart() {
             <Line
               type="monotone"
               dataKey="volume"
-              stroke="rgb(22, 163, 74)"
+              stroke="rgb(139, 92, 246)"
               strokeWidth={3}
-              dot={{ fill: "rgb(22, 163, 74)", strokeWidth: 2, r: 4 }}
+              dot={{ fill: "rgb(139, 92, 246)", strokeWidth: 2, r: 4 }}
               activeDot={{ r: 6 }}
               animationDuration={1000}
             />

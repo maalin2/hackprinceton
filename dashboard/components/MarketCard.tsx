@@ -30,7 +30,7 @@ export function MarketCard({ market }: MarketCardProps) {
           <div>
             <p className="text-xs text-muted-foreground mb-1">YES</p>
             <div className="flex gap-1 font-mono text-xs">
-              <span className="text-green-600 dark:text-green-400">
+              <span className="text-purple-600 dark:text-purple-400">
                 {market.yesBid}¢
               </span>
               <span className="text-muted-foreground">/</span>
@@ -42,7 +42,7 @@ export function MarketCard({ market }: MarketCardProps) {
           <div>
             <p className="text-xs text-muted-foreground mb-1">NO</p>
             <div className="flex gap-1 font-mono text-xs">
-              <span className="text-green-600 dark:text-green-400">
+              <span className="text-purple-600 dark:text-purple-400">
                 {market.noBid}¢
               </span>
               <span className="text-muted-foreground">/</span>

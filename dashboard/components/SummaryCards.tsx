@@ -97,7 +97,7 @@ export function SummaryCards() {
               className={`text-2xl font-mono font-bold ${
                 card.positive !== undefined
                   ? card.positive
-                    ? "text-green-600 dark:text-green-400"
+                    ? "text-purple-600 dark:text-purple-400"
                     : "text-red-600 dark:text-red-400"
                   : ""
               }`}

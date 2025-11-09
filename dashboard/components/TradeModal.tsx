@@ -85,7 +85,7 @@ export function TradeModal({ pick, open, onOpenChange, onConfirm }: TradeModalPr
               <Label className="text-sm font-semibold">Decision</Label>
               <div className="flex items-center gap-2">
                 {isBuy ? (
-                  <TrendingUp className="h-4 w-4 text-green-600" />
+                  <TrendingUp className="h-4 w-4 text-purple-600" />
                 ) : isShort ? (
                   <TrendingDown className="h-4 w-4 text-red-600" />
                 ) : null}
