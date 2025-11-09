@@ -43,17 +43,21 @@ export function useRecommendations() {
   /**
    * Fetch recommendations from Python backend (hybrid analysis)
    */
-  const fetchRecommendations = async () => {
+  const fetchRecommendations = async (forceNew: boolean = false) => {
     setProcessing(true);
-    
+
     try {
       const timestamp = new Date().toLocaleTimeString();
       console.log(`\n${'='.repeat(80)}`);
       console.log(`[${timestamp}] 🔄 Fetching recommendations from Python backend`);
-      console.log(`API URL: ${API_BASE_URL}/api/recommendations`);
+      console.log(`API URL: ${API_BASE_URL}/api/recommendations${forceNew ? '?force=true' : ''}`);
+      console.log(`Force new analysis: ${forceNew}`);
       console.log(`${'='.repeat(80)}`);
-      
-      const response = await fetch(`${API_BASE_URL}/api/recommendations`);
+
+      const url = forceNew
+        ? `${API_BASE_URL}/api/recommendations?force=true&t=${Date.now()}`
+        : `${API_BASE_URL}/api/recommendations`;
+      const response = await fetch(url);
       
       if (!response.ok) {
         throw new Error(`API failed: ${response.status}`);
@@ -168,7 +172,12 @@ export function useRecommendations() {
           const grok = oppData.grok_sentiment;
           console.log(`   🤖 Grok Status: ${grok.status}`);
           if (grok.status === 'success') {
-            console.log(`      └─ Sentiment: ${grok.sentiment_label || grok.label} (${grok.sentiment_score || grok.score}%)`);
+            const score = grok.sentiment_score ?? grok.score;
+            if (score === null || score === undefined) {
+              console.warn(`      ⚠️  WARNING: Grok sentiment score is null/undefined - using fallback (50%)`);
+              console.warn(`      ⚠️  Grok sentiment is not working properly!`);
+            }
+            console.log(`      └─ Sentiment: ${grok.sentiment_label || grok.label} (${score ?? 50}%)`);
             console.log(`      └─ Confidence: ${grok.confidence}`);
             if (grok.key_themes && grok.key_themes.length > 0) {
               console.log(`      └─ Themes: ${grok.key_themes.slice(0, 3).join(', ')}`);
@@ -252,6 +261,16 @@ export function useRecommendations() {
     fetchRecommendations();
   };
 
+  /**
+   * Clear recommendations and fetch new ones
+   */
+  const getMoreRecommendations = () => {
+    console.log("\n🔄 Clearing old recommendations and fetching NEW ones (force=true)...");
+    setRecommendations([]);
+    setLoading(true);
+    fetchRecommendations(true); // Pass true to force new analysis
+  };
+
   return {
     recommendations: recommendations.filter((r) => r.status === "pending"),
     loading,
@@ -261,6 +280,7 @@ export function useRecommendations() {
     snoozeRecommendation,
     dismissRecommendation,
     refresh,
+    getMoreRecommendations,
   };
 }
 
