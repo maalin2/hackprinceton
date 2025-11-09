@@ -7,10 +7,6 @@ interface UIState {
   theme: "dark" | "light" | "system";
   setTheme: (theme: "dark" | "light" | "system") => void;
 
-  // Drawers
-  selectedPositionId: string | null;
-  setSelectedPositionId: (id: string | null) => void;
-
   // Agent feed
   agentFeedCollapsed: boolean;
   toggleAgentFeed: () => void;
@@ -26,6 +22,10 @@ interface UIState {
   // Settings
   settings: UISettings;
   updateSettings: (settings: Partial<UISettings>) => void;
+
+  // Trading deck mode
+  isTradingDeckMode: boolean;
+  setTradingDeckMode: (enabled: boolean) => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -34,10 +34,6 @@ export const useUIStore = create<UIState>()(
       // Theme
       theme: "dark",
       setTheme: (theme) => set({ theme }),
-
-      // Drawers
-      selectedPositionId: null,
-      setSelectedPositionId: (id) => set({ selectedPositionId: id }),
 
       // Agent feed
       agentFeedCollapsed: false,
@@ -64,6 +60,10 @@ export const useUIStore = create<UIState>()(
         set((state) => ({
           settings: { ...state.settings, ...newSettings },
         })),
+
+      // Trading deck mode
+      isTradingDeckMode: false,
+      setTradingDeckMode: (enabled) => set({ isTradingDeckMode: enabled }),
     }),
     {
       name: "kalshi-ui-storage",

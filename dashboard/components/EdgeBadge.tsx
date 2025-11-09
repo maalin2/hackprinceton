@@ -14,9 +14,9 @@ export function EdgeBadge({ edge }: EdgeBadgeProps) {
   };
 
   const getColorClass = () => {
-    if (edge >= 0.3) return "bg-green-600 text-white hover:bg-green-700";
+    if (edge >= 0.3) return "bg-purple-600 text-white hover:bg-purple-700";
     if (edge >= 0.1) return "bg-blue-600 text-white hover:bg-blue-700";
-    if (edge >= 0) return "border-green-600 text-green-600";
+    if (edge >= 0) return "border-purple-600 text-purple-600";
     return "";
   };
 
