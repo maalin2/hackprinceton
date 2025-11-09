@@ -56,21 +56,16 @@ except ImportError as e:
 
 # Try to import MCP, fallback to simple implementation if not available
 try:
-    from mcp.server import Server
-    from mcp.server.stdio import stdio_server
-    from mcp.types import Tool, TextContent
+    from mcp.server.fastmcp import FastMCP
     MCP_AVAILABLE = True
 except ImportError:
     # MCP not available, use simple implementation
     MCP_AVAILABLE = False
-    Server = None
-    stdio_server = None
-    Tool = None
-    TextContent = None
+    FastMCP = None
 
 if MCP_AVAILABLE:
-    # Initialize the MCP server
-    app = Server("quantitative-agent")
+    # Initialize the MCP server using FastMCP
+    app = FastMCP("quantitative-agent")
 else:
     app = None
 
@@ -148,321 +143,152 @@ def fetch_market_history(ticker: str, limit: int = 100) -> List[Dict]:
 # ============================================================================
 
 if MCP_AVAILABLE:
-    @app.list_tools()
-    async def list_tools() -> list[Tool]:
-        """List available quantitative analysis tools"""
-        return [
-            Tool(
-                name="analyze_weather_markets",
-                description="Analyze weather markets using 3 statistical sources: NOAA (GFS), Open-Meteo (ECMWF), and Climatology. Returns market analysis with probabilities, edge calculations, and trading recommendations.",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "limit": {
-                            "type": "integer",
-                            "description": "Maximum number of markets to analyze (default: 10)",
-                            "default": 10
-                        }
-                    }
-                }
-            ),
-            Tool(
-                name="analyze_politics_markets",
-                description="Analyze politics markets using 3 statistical sources: Kalshi Market Consensus, Historical Voting Patterns, and Betting Market Model. Returns market analysis with probabilities, edge calculations, and trading recommendations.",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "limit": {
-                            "type": "integer",
-                            "description": "Maximum number of markets to analyze (default: 10)",
-                            "default": 10
-                        }
-                    }
-                }
-            ),
-            Tool(
-                name="analyze_economics_markets",
-                description="Analyze economics markets using 3 statistical sources: FRED (Federal Reserve), Economic Indicators (Alpha Vantage/BLS/World Bank), and Kalshi Market Consensus. Returns market analysis with probabilities, edge calculations, and trading recommendations.",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "limit": {
-                            "type": "integer",
-                            "description": "Maximum number of markets to analyze (default: 10)",
-                            "default": 10
-                        }
-                    }
-                }
-            ),
-            Tool(
-                name="analyze_single_market",
-                description="Analyze a single market by ticker. Automatically determines category (weather/politics/economics) and uses appropriate quantitative sources.",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "ticker": {
-                            "type": "string",
-                            "description": "Kalshi market ticker (e.g., 'KXHIGHNY-25NOV08-T71')"
-                        }
-                    },
-                    "required": ["ticker"]
-                }
-            ),
-            Tool(
-                name="get_market_categories",
-                description="Get available market categories and their quantitative sources",
-                inputSchema={
-                    "type": "object",
-                    "properties": {}
-                }
-            ),
-            Tool(
-                name="sentiment_analysis",
-                description="Analyze X (Twitter) sentiment for a specific Kalshi market using Grok. Searches X for what people are saying about the market topic and returns JSON with sentiment score, key themes, trends, and market impact analysis.",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "market_title": {
-                            "type": "string",
-                            "description": "The title/description of the market to analyze sentiment for"
-                        },
-                        "market_ticker": {
-                            "type": "string",
-                            "description": "Optional ticker symbol for the market"
-                        }
-                    },
-                    "required": ["market_title"]
-                }
-            ),
-            Tool(
-                name="get_markets_with_probabilities",
-                description="Fetch all open markets from specified categories with probability calculations. Returns market data including tickers, prices, volumes, implied probabilities, and spread confidence scores.",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "categories": {
-                            "type": "array",
-                            "items": {"type": "string"},
-                            "description": "List of category names (e.g., ['Politics', 'Sports', 'Economics'])"
-                        }
-                    },
-                    "required": ["categories"]
-                }
-            ),
-            Tool(
-                name="analyze_market_volatility",
-                description="Analyze market volatility and price momentum. Returns volatility metrics, confidence scores, momentum indicators (bullish/bearish/neutral), and price trends.",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "ticker": {
-                            "type": "string",
-                            "description": "Market ticker"
-                        },
-                        "current_price": {
-                            "type": "number",
-                            "description": "Current market price (last_price)"
-                        },
-                        "yes_bid": {
-                            "type": "number",
-                            "description": "Current bid price"
-                        },
-                        "yes_ask": {
-                            "type": "number",
-                            "description": "Current ask price"
-                        },
-                        "previous_price": {
-                            "type": "number",
-                            "description": "Previous price if available"
-                        }
-                    },
-                    "required": ["ticker", "current_price", "yes_bid", "yes_ask"]
-                }
-            ),
-            Tool(
-                name="analyze_market_volume",
-                description="Analyze market volume and convert to confidence metric. Returns volume metrics, confidence scores, and liquidity indicators.",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "ticker": {
-                            "type": "string",
-                            "description": "Market ticker"
-                        }
-                    },
-                    "required": ["ticker"]
-                }
-            ),
-            Tool(
-                name="greenlight_analysis",
-                description="Aggregate all signals into trading decision. Combines volatility, volume, spread confidence, and X/Twitter sentiment analysis (via Grok) to generate trading recommendations (STRONG_BUY/BUY/STRONG_SHORT/SHORT/WATCH/PASS) with detailed reasoning.",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "ticker": {
-                            "type": "string",
-                            "description": "Market ticker"
-                        },
-                        "market_title": {
-                            "type": "string",
-                            "description": "Market title/description for sentiment analysis"
-                        },
-                        "market_p": {
-                            "type": "number",
-                            "description": "Market implied probability (0-1)"
-                        },
-                        "volatility_confidence": {
-                            "type": "number",
-                            "description": "Confidence from volatility analysis (0-1)"
-                        },
-                        "volume_confidence": {
-                            "type": "number",
-                            "description": "Volume confidence score (0-1)"
-                        },
-                        "momentum": {
-                            "type": "string",
-                            "description": "Price momentum: 'bullish', 'bearish', or 'neutral'"
-                        },
-                        "spread_conf": {
-                            "type": "number",
-                            "description": "Confidence from bid-ask spread (0-1)"
-                        },
-                        "include_sentiment": {
-                            "type": "boolean",
-                            "description": "Whether to include X/Twitter sentiment analysis (default: true)",
-                            "default": True
-                        }
-                    },
-                    "required": ["ticker", "market_title", "market_p", "volatility_confidence", "volume_confidence", "momentum", "spread_conf"]
-                }
-            ),
-            Tool(
-                name="scan_categories_for_opportunities",
-                description="Scan categories for trading opportunities with full technical analysis. Runs complete pipeline: market discovery → volatility → volume → greenlight decision. Returns ranked opportunities by confidence.",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "categories": {
-                            "type": "array",
-                            "items": {"type": "string"},
-                            "description": "List of categories to scan (e.g., ['Politics', 'Economics'])"
-                        },
-                        "min_confidence": {
-                            "type": "number",
-                            "description": "Minimum confidence threshold (0-1, default: 0.5)",
-                            "default": 0.5
-                        },
-                        "top_n": {
-                            "type": "integer",
-                            "description": "Return top N opportunities (default: 10)",
-                            "default": 10
-                        }
-                    },
-                    "required": ["categories"]
-                }
-            )
-        ]
+    # FastMCP Tool Definitions - each function is decorated with @app.tool()
 
-# ============================================================================
-# Tool Implementations
-# ============================================================================
+    @app.tool()
+    async def analyze_weather_markets_tool(limit: int = 10):
+        """Analyze weather markets using 3 statistical sources: NOAA (GFS), Open-Meteo (ECMWF), and Climatology.
 
-@app.call_tool()
-async def call_tool(name: str, arguments: dict) -> list[TextContent]:
-    """Execute quantitative analysis tools"""
-    
-    if name == "analyze_weather_markets":
-        limit = arguments.get("limit", 10)
+        Returns market analysis with probabilities, edge calculations, and trading recommendations.
+
+        Args:
+            limit: Maximum number of markets to analyze (default: 10)
+        """
         result = await analyze_weather_markets(limit)
-        return [TextContent(type="text", text=json.dumps(result, indent=2))]
-    
-    elif name == "analyze_politics_markets":
-        limit = arguments.get("limit", 10)
+        return result
+
+    @app.tool()
+    async def analyze_politics_markets_tool(limit: int = 10):
+        """Analyze politics markets using 3 statistical sources: Kalshi Market Consensus, Historical Voting Patterns, and Betting Market Model.
+
+        Returns market analysis with probabilities, edge calculations, and trading recommendations.
+
+        Args:
+            limit: Maximum number of markets to analyze (default: 10)
+        """
         result = await analyze_politics_markets(limit)
-        return [TextContent(type="text", text=json.dumps(result, indent=2))]
-    
-    elif name == "analyze_economics_markets":
-        limit = arguments.get("limit", 10)
+        return result
+
+    @app.tool()
+    async def analyze_economics_markets_tool(limit: int = 10):
+        """Analyze economics markets using 3 statistical sources: FRED (Federal Reserve), Economic Indicators (Alpha Vantage/BLS/World Bank), and Kalshi Market Consensus.
+
+        Returns market analysis with probabilities, edge calculations, and trading recommendations.
+
+        Args:
+            limit: Maximum number of markets to analyze (default: 10)
+        """
         result = await analyze_economics_markets(limit)
-        return [TextContent(type="text", text=json.dumps(result, indent=2))]
-    
-    elif name == "analyze_single_market":
-        ticker = arguments.get("ticker")
-        if not ticker:
-            return [TextContent(type="text", text=json.dumps({"error": "Ticker is required"}, indent=2))]
+        return result
+
+    @app.tool()
+    async def analyze_single_market_tool(ticker: str):
+        """Analyze a single market by ticker. Automatically determines category (weather/politics/economics) and uses appropriate quantitative sources.
+
+        Args:
+            ticker: Kalshi market ticker (e.g., 'KXHIGHNY-25NOV08-T71')
+        """
         result = await analyze_single_market(ticker)
-        return [TextContent(type="text", text=json.dumps(result, indent=2))]
-    
-    elif name == "get_market_categories":
+        return result
+
+    @app.tool()
+    def get_market_categories_tool():
+        """Get available market categories and their quantitative sources."""
         result = get_market_categories()
-        return [TextContent(type="text", text=json.dumps(result, indent=2))]
+        return result
 
-    elif name == "sentiment_analysis":
-        market_title = arguments.get("market_title")
-        market_ticker = arguments.get("market_ticker")
-        if not market_title:
-            return [TextContent(type="text", text=json.dumps({"error": "market_title is required"}, indent=2))]
+    @app.tool()
+    async def sentiment_analysis_tool(market_title: str, market_ticker: str = None):
+        """Analyze X (Twitter) sentiment for a specific Kalshi market using Grok.
+
+        Searches X for what people are saying about the market topic and returns JSON with sentiment score, key themes, trends, and market impact analysis.
+
+        Args:
+            market_title: The title/description of the market to analyze sentiment for
+            market_ticker: Optional ticker symbol for the market
+        """
         result = await sentiment_analysis(market_title, market_ticker)
-        return [TextContent(type="text", text=json.dumps(result, indent=2))]
+        return result
 
-    elif name == "get_markets_with_probabilities":
-        categories = arguments.get("categories")
-        if not categories:
-            return [TextContent(type="text", text=json.dumps({"error": "categories is required"}, indent=2))]
-        result = await get_markets_with_probabilities_tool(categories)
-        return [TextContent(type="text", text=result)]
+    @app.tool()
+    async def get_markets_with_probabilities_tool(categories: list[str]):
+        """Fetch all open markets from specified categories with probability calculations.
 
-    elif name == "analyze_market_volatility":
-        ticker = arguments.get("ticker")
-        current_price = arguments.get("current_price")
-        yes_bid = arguments.get("yes_bid")
-        yes_ask = arguments.get("yes_ask")
-        previous_price = arguments.get("previous_price")
+        Returns market data including tickers, prices, volumes, implied probabilities, and spread confidence scores.
 
-        if not ticker or current_price is None or yes_bid is None or yes_ask is None:
-            return [TextContent(type="text", text=json.dumps({"error": "ticker, current_price, yes_bid, and yes_ask are required"}, indent=2))]
+        Args:
+            categories: List of category names (e.g., ['Politics', 'Sports', 'Economics'])
+        """
+        result = await get_markets_with_probabilities(categories)
+        return json.loads(result)
 
-        result = await analyze_market_volatility_tool(ticker, current_price, yes_bid, yes_ask, previous_price)
-        return [TextContent(type="text", text=result)]
+    @app.tool()
+    async def analyze_market_volatility_tool(ticker: str, current_price: float, yes_bid: float, yes_ask: float, previous_price: float = None):
+        """Analyze market volatility and price momentum.
 
-    elif name == "analyze_market_volume":
-        ticker = arguments.get("ticker")
-        if not ticker:
-            return [TextContent(type="text", text=json.dumps({"error": "ticker is required"}, indent=2))]
-        result = await analyze_market_volume_tool(ticker)
-        return [TextContent(type="text", text=result)]
+        Returns volatility metrics, confidence scores, momentum indicators (bullish/bearish/neutral), and price trends.
 
-    elif name == "greenlight_analysis":
-        ticker = arguments.get("ticker")
-        market_title = arguments.get("market_title")
-        market_p = arguments.get("market_p")
-        volatility_confidence = arguments.get("volatility_confidence")
-        volume_confidence = arguments.get("volume_confidence")
-        momentum = arguments.get("momentum")
-        spread_conf = arguments.get("spread_conf")
-        include_sentiment = arguments.get("include_sentiment", True)
+        Args:
+            ticker: Market ticker
+            current_price: Current market price (last_price)
+            yes_bid: Current bid price
+            yes_ask: Current ask price
+            previous_price: Previous price if available
+        """
+        result = await analyze_market_volatility(ticker, current_price, yes_bid, yes_ask, previous_price)
+        return json.loads(result)
 
-        if not all([ticker, market_title, market_p is not None, volatility_confidence is not None,
-                   volume_confidence is not None, momentum, spread_conf is not None]):
-            return [TextContent(type="text", text=json.dumps({"error": "ticker, market_title, market_p, volatility_confidence, volume_confidence, momentum, and spread_conf are required"}, indent=2))]
+    @app.tool()
+    async def analyze_market_volume_tool(ticker: str):
+        """Analyze market volume and convert to confidence metric.
 
-        result = await greenlight_analysis_tool(ticker, market_title, market_p, volatility_confidence,
-                                               volume_confidence, momentum, spread_conf, include_sentiment)
-        return [TextContent(type="text", text=result)]
+        Returns volume metrics, confidence scores, and liquidity indicators.
 
-    elif name == "scan_categories_for_opportunities":
-        categories = arguments.get("categories")
-        min_confidence = arguments.get("min_confidence", 0.5)
-        top_n = arguments.get("top_n", 10)
+        Args:
+            ticker: Market ticker
+        """
+        result = await analyze_market_volume(ticker)
+        return json.loads(result)
 
-        if not categories:
-            return [TextContent(type="text", text=json.dumps({"error": "categories is required"}, indent=2))]
+    @app.tool()
+    async def greenlight_analysis_tool(ticker: str, market_title: str, market_p: float,
+                                      volatility_confidence: float, volume_confidence: float,
+                                      momentum: str, spread_conf: float, include_sentiment: bool = True):
+        """Aggregate all signals into trading decision.
 
-        result = await scan_categories_for_opportunities_tool(categories, min_confidence, top_n)
-        return [TextContent(type="text", text=result)]
+        Combines volatility, volume, spread confidence, and X/Twitter sentiment analysis (via Grok) to generate trading recommendations (BUY/SHORT/PASS) with detailed reasoning.
 
-    else:
-        return [TextContent(type="text", text=json.dumps({"error": f"Unknown tool: {name}"}, indent=2))]
+        Args:
+            ticker: Market ticker
+            market_title: Market title/description for sentiment analysis
+            market_p: Market implied probability (0-1)
+            volatility_confidence: Confidence from volatility analysis (0-1)
+            volume_confidence: Volume confidence score (0-1)
+            momentum: Price momentum: 'bullish', 'bearish', or 'neutral'
+            spread_conf: Confidence from bid-ask spread (0-1)
+            include_sentiment: Whether to include X/Twitter sentiment analysis (default: true)
+        """
+        result = await _greenlight_analysis_impl(ticker, market_title, market_p, volatility_confidence,
+                                                 volume_confidence, momentum, spread_conf, include_sentiment)
+        return json.loads(result)
+
+    @app.tool()
+    async def scan_categories_for_opportunities_tool(categories: list[str], min_confidence: float = 0.5, top_n: int = 10):
+        """Scan categories for trading opportunities with full technical analysis.
+
+        Runs complete pipeline: market discovery → volatility → volume → greenlight decision. Returns ranked opportunities by confidence.
+
+        Args:
+            categories: List of categories to scan (e.g., ['Politics', 'Economics'])
+            min_confidence: Minimum confidence threshold (0-1, default: 0.5)
+            top_n: Return top N opportunities (default: 10)
+        """
+        result = await scan_categories_for_opportunities(categories, min_confidence, top_n)
+        return json.loads(result)
+
+# ============================================================================
+# Tool Implementations (called by FastMCP tool wrappers above)
+# ============================================================================
 
 # ============================================================================
 # Analysis Functions
@@ -1459,15 +1285,32 @@ async def _scan_categories_for_opportunities_impl(categories: List[str],
 # Main Entry Point
 # ============================================================================
 
-async def main():
-    """Run the MCP server"""
-    async with stdio_server() as (read_stream, write_stream):
-        await app.run(
-            read_stream,
-            write_stream,
-            app.create_initialization_options()
-        )
+def main():
+    """Run the MCP server with stdio transport (default for MCP clients)"""
+    # FastMCP handles stdio automatically when run() is called without transport arg
+    app.run()
+
+def main_http(port=8000):
+    """Run the MCP server with HTTP SSE transport"""
+    import os
+
+    print("🚀 MCP Quantitative Agent HTTP Server starting...")
+    print(f"📡 Server will be available at: http://localhost:{port}")
+    print("📚 Available tools: scan_categories_for_opportunities, analyze_market_volume, greenlight_analysis, etc.")
+
+    # Set port via environment variable (FastMCP reads this)
+    os.environ["PORT"] = str(port)
+
+    # Use FastMCP's SSE transport
+    app.run(transport="sse")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    import sys
+
+    if len(sys.argv) > 1 and sys.argv[1] == "--http":
+        # Run with HTTP transport
+        main_http()
+    else:
+        # Run with stdio transport (default for MCP)
+        main()
 
