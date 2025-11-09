@@ -1,12 +1,11 @@
 {
   "mcpServers": {
-    "quantitative-agent": {
-      "command": "python",
+    "quant-ts": {
+      "command": "node",
       "args": [
-        "mcp_quantitative_agent/server.py"
+        "dist/index.js"
       ],
-      "cwd": "."
+      "cwd": "/home/mo/hackprinceton/mcp_quantitative_agent/quant-ts"
     }
   }
 }
-
