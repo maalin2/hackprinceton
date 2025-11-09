@@ -87,7 +87,7 @@ export function useAgentFeed() {
 
   useEffect(() => {
     console.log("✅ Agent Feed: Using REAL multi-agent system (Quant + Sentiment + Decision)");
-    console.log("📡 Agent Feed: Auto-refresh every 60 seconds");
+    console.log("📡 Agent Feed: Auto-refresh every 5 minutes");
     
     // No cleanup needed - useRecommendations handles it
   }, []);
