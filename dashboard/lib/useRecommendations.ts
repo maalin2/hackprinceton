@@ -32,10 +32,10 @@ export function useRecommendations() {
     // Initial fetch
     fetchRecommendations();
 
-    // Re-fetch every 60 seconds
+    // Re-fetch every 5 minutes
     const interval = setInterval(() => {
       fetchRecommendations();
-    }, 60000);
+    }, 300000);
 
     return () => clearInterval(interval);
   }, []);
