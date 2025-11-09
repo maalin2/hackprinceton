@@ -1,20 +1,22 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SummaryCards } from "@/components/SummaryCards";
-import { PositionsTable } from "@/components/PositionsTable";
-import { PositionDrawer } from "@/components/PositionDrawer";
-import { AgentFeed } from "@/components/AgentFeed";
+import { TradingCardDeck } from "@/components/TradingCardDeck";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   consumeSkipOnboardingRedirect,
   useUserPreferences,
 } from "@/lib/useUserPreferences";
+import { Target, X } from "lucide-react";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { preferences, loading } = useUserPreferences();
   const skipRedirectRef = useRef(false);
+  const [showTradingDeck, setShowTradingDeck] = useState(false);
 
   useEffect(() => {
     if (!loading && !preferences) {
@@ -47,6 +49,29 @@ export default function DashboardPage() {
     );
   }
 
+  if (showTradingDeck) {
+    return (
+      <div className="container py-6 max-w-4xl mx-auto">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Trading Picks</h1>
+            <p className="text-muted-foreground">
+              Swipe through AI-curated trading opportunities
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => setShowTradingDeck(false)}
+          >
+            <X className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Button>
+        </div>
+        <TradingCardDeck />
+      </div>
+    );
+  }
+
   return (
     <div className="container py-6">
       <div className="flex flex-col lg:flex-row gap-6">
@@ -56,24 +81,34 @@ export default function DashboardPage() {
             <h1 className="text-3xl font-bold mb-2">
               Welcome back, {preferences.name}! 👋
             </h1>
-            <p className="text-muted-foreground">
-              Monitor your portfolio performance and active positions
-            </p>
           </div>
+
+          {/* Start Trading CTA */}
+          <Card className="p-6 bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-primary" />
+                  <h2 className="text-xl font-semibold">Start Trading</h2>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  5 new AI picks ready for review today
+                </p>
+              </div>
+              <Button
+                size="lg"
+                onClick={() => setShowTradingDeck(true)}
+                className="shrink-0"
+              >
+                <Target className="h-4 w-4 mr-2" />
+                Review Picks
+              </Button>
+            </div>
+          </Card>
 
           <SummaryCards />
-          <PositionsTable />
-        </div>
-
-        {/* Agent Feed Sidebar */}
-        <div className="lg:w-96 shrink-0">
-          <div className="sticky top-20 max-h-[calc(100vh-7rem)]">
-            <AgentFeed />
-          </div>
         </div>
       </div>
-
-      <PositionDrawer />
     </div>
   );
 }

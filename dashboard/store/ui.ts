@@ -7,10 +7,6 @@ interface UIState {
   theme: "dark" | "light" | "system";
   setTheme: (theme: "dark" | "light" | "system") => void;
 
-  // Drawers
-  selectedPositionId: string | null;
-  setSelectedPositionId: (id: string | null) => void;
-
   // Agent feed
   agentFeedCollapsed: boolean;
   toggleAgentFeed: () => void;
@@ -34,10 +30,6 @@ export const useUIStore = create<UIState>()(
       // Theme
       theme: "dark",
       setTheme: (theme) => set({ theme }),
-
-      // Drawers
-      selectedPositionId: null,
-      setSelectedPositionId: (id) => set({ selectedPositionId: id }),
 
       // Agent feed
       agentFeedCollapsed: false,

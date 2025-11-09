@@ -2,32 +2,6 @@ export type Domain = "Politics" | "Weather" | "Crypto" | "Sports";
 
 export type Side = "YES" | "NO";
 
-export type PositionStatus = "open" | "closed";
-
-export interface Position {
-  id: string;
-  ticker: string;
-  market: string;
-  domain: Domain;
-  side: Side;
-  entry: number;
-  mark: number;
-  size: number;
-  pnl: number;
-  edge: number;
-  status: PositionStatus;
-  openedAt: Date;
-  closedAt?: Date;
-  rationale?: string;
-  fills: Fill[];
-}
-
-export interface Fill {
-  timestamp: Date;
-  price: number;
-  quantity: number;
-}
-
 export interface Market {
   id: string;
   ticker: string;
@@ -80,5 +54,27 @@ export interface UISettings {
   minEdgeThreshold: number;
   maxSpread: number;
   maxPositionSize: number;
+}
+
+export interface TradingPickSentiment {
+  label: "positive" | "negative" | "neutral";
+  score: number; // 0-100
+  confidence: "high" | "medium" | "low";
+}
+
+export interface TradingPick {
+  ticker: string;
+  market_question?: string; // Optional human-readable market question
+  decision: "BUY" | "SHORT" | "PASS";
+  technical_direction: "buy" | "short" | null;
+  market_p: number; // 0.0-1.0 probability
+  volatility_confidence: number; // 0.0-1.0
+  volume_confidence: number; // 0.0-1.0
+  momentum: "bullish" | "bearish" | "neutral";
+  final_confidence: number; // 0.0-1.0
+  reasoning: string;
+  sentiment: TradingPickSentiment;
+  key_themes: string[];
+  market_impact: string;
 }
 
