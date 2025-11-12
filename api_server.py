@@ -38,44 +38,17 @@ app = FastAPI(
 )
 
 # Enable CORS for dashboard
-# Note: For ngrok hosting, we allow all origins. In production, restrict this!
-import re
-
-def is_allowed_origin(origin: str) -> bool:
-    """Check if origin is allowed (localhost, vercel, or ngrok)"""
-    if not origin:
-        return False
-    
-    allowed_patterns = [
-        r"^http://localhost:\d+$",           # localhost any port
-        r"^https://.*\.vercel\.app$",        # Vercel
-        r"^https://.*\.ngrok\.io$",          # ngrok
-        r"^https://.*\.ngrok-free\.app$",    # ngrok free tier
-    ]
-    
-    return any(re.match(pattern, origin) for pattern in allowed_patterns)
-
-# Custom CORS middleware that allows ngrok URLs
-from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.cors import ALL_METHODS
-from starlette.responses import Response
-
-@app.middleware("http")
-async def custom_cors_middleware(request, call_next):
-    """Custom CORS middleware to handle ngrok URLs"""
-    origin = request.headers.get("origin")
-    
-    response = await call_next(request)
-    
-    # Allow all origins for demo (ngrok, localhost, etc.)
-    # In production, use is_allowed_origin(origin) check
-    if origin:
-        response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Allow-Methods"] = "*"
-        response.headers["Access-Control-Allow-Headers"] = "*"
-    
-    return response
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",  # Next.js dev
+        "http://localhost:3001",  # Alternative port
+        "https://*.vercel.app",   # Vercel deployment
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 # ============================================================================
